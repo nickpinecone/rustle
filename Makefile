@@ -1,4 +1,4 @@
-TARGET_EXEC := ncurses
+TARGET_EXEC := riff
 
 BUILD_DIR := ./build
 SRC_DIRS := ./src
