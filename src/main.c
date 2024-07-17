@@ -8,11 +8,13 @@ void init()
     cbreak();
     noecho();
     keypad(stdscr, TRUE);
+
+    // Non blocking input
+    timeout(100);
 }
 
 int close()
 {
-    getch();
     endwin();
     return 0;
 }
@@ -21,27 +23,27 @@ int main()
 {
     init();
 
-    struct inputbox input = input_create(3, 20, 0, 0);
-    refresh();
-    input_box(&input, "Search", 0, 3);
-    wrefresh(input.raw);
+    struct inputbox input = input_create(0, 0, 20, "Search");
 
     bool isOn = true;
     while (isOn)
     {
-        switch (input_capture(&input))
+        int in = getch();
+        input_focus(&input);
+
+        switch (input_capture(&input, in))
         {
+        case Enter:
+            isOn = false;
+            break;
+
         case Exit:
             isOn = false;
             break;
-        default:
-            continue;
-        }
-        refresh();
-        wrefresh(input.raw);
-    }
 
-    mvprintw(input.y + input.height, 0, "Entered: %s", input.content);
+        case Capture:;
+        }
+    }
 
     return close();
 }

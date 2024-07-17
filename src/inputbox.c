@@ -1,71 +1,76 @@
-#include "inputbox.h"
-
 #include <ncurses.h>
 
-struct inputbox input_create(int height, int width, int y, int x)
+#include "inputbox.h"
+
+struct inputbox input_create(int y, int x, int width, char *label)
 {
-    WINDOW *win = newwin(height, width, y, x);
+    WINDOW *win = newwin(3, width, y, x);
+    refresh();
+
+    box(win, 0, 0);
+    mvwprintw(win, 0, 3, "%s", label);
+    wrefresh(win);
 
     return (struct inputbox){
         .raw = win,
-        .height = height,
+        .height = 3,
         .width = width,
         .y = y,
         .x = x,
-        .inX = x,
-        .inY = y,
+        .inY = y + 1,
+        .inX = x + 1,
         .content = "",
         .isFocus = false,
         .length = 0,
     };
 }
 
-void input_box(struct inputbox *input, char *label, int y, int x)
-{
-    box(input->raw, 0, 0);
-    mvwprintw(input->raw, y, x, "%s", label);
-
-    input->inY = input->y + 1;
-    input->inX = input->x + 1;
-}
-
-enum instate input_capture(struct inputbox *input)
+void input_focus(struct inputbox *input)
 {
     input->isFocus = true;
+}
 
+enum instatus input_capture(struct inputbox *input, int key)
+{
     int posY = input->inY;
     int posX = input->inX + input->length;
     move(posY, posX);
 
-    int in = getch();
-
-    switch (in)
+    if (key != ERR)
     {
-    case '\n':
-        input->isFocus = false;
-        return Exit;
-        break;
-
-    case KEY_BACKSPACE:
-        if (input->length > 0)
+        switch (key)
         {
-            input->length--;
-            input->content[input->length] = ' ';
-        }
-        break;
+        case KEY_CONFIRM:
+            input->isFocus = false;
+            return Enter;
+            break;
 
-    default:
-        if (input->length < 1000 && input->length < input->width - 2)
-        {
-            input->content[input->length] = (char)in;
-            input->length++;
+        case KEY_ESCAPE:
+            input->isFocus = false;
+            return Exit;
+            break;
+
+        case KEY_BACKSPACE:
+            if (input->length > 0)
+            {
+                input->length--;
+                input->content[input->length] = ' ';
+            }
+            break;
+
+        default:
+            if (input->length < 1000 && input->length < input->width - 2)
+            {
+                input->content[input->length] = (char)key;
+                input->length++;
+            }
+            break;
         }
-        break;
+
+        mvprintw(input->inY, input->inX, "%s", input->content);
+        wrefresh(input->raw);
+        input->content[input->length] = '\0';
     }
-
-    mvprintw(input->inY, input->inX, "%s", input->content);
-    wrefresh(input->raw);
-    input->content[input->length] = '\0';
 
     return Capture;
 }

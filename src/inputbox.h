@@ -3,8 +3,12 @@
 
 #include <ncurses.h>
 
-enum instate {
+#define KEY_ESCAPE 27
+#define KEY_CONFIRM '\n'
+
+enum instatus {
     Capture,
+    Enter,
     Exit,
 };
 
@@ -20,8 +24,8 @@ struct inputbox
     bool isFocus;
 };
 
-struct inputbox input_create(int height, int width, int y, int x);
-void input_box(struct inputbox* input, char* label, int y, int x);
-enum instate input_capture(struct inputbox* input);
+struct inputbox input_create(int y, int x, int width, char* label);
+void input_focus(struct inputbox* input);
+enum instatus input_capture(struct inputbox* input, int key);
 
 #endif
