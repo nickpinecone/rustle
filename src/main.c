@@ -1,7 +1,7 @@
 #include <ncurses.h>
 
+#include "inputbox.h"
 #include "selectmenu.h"
-
 
 void init()
 {
@@ -24,10 +24,32 @@ int main()
 {
     init();
 
-    struct selectmenu menu = menu_create(0, 0, 10, 20, "Stations");
+    struct inputbox input = input_create(0, 0, 20, "Search");
+    struct selectmenu menu = menu_create(input.y + input.height, 0, 10, 20, "Stations");
 
     menu_add(&menu, "Code Radio");
     menu_add(&menu, "Chillofi");
+    menu_update(&menu, ERR);
+
+    bool isOn = true;
+    while (isOn)
+    {
+        int in = getch();
+        input_focus(&input);
+
+        switch (input_capture(&input, in))
+        {
+        case Enter:
+            isOn = false;
+            break;
+
+        case Exit:
+            isOn = false;
+            break;
+
+        case Capture:;
+        }
+    }
 
     while (true)
     {
@@ -35,28 +57,6 @@ int main()
 
         menu_update(&menu, in);
     }
-
-    // struct inputbox input = input_create(0, 0, 20, "Search");
-    //
-    // bool isOn = true;
-    // while (isOn)
-    // {
-    //     int in = getch();
-    //     input_focus(&input);
-    //
-    //     switch (input_capture(&input, in))
-    //     {
-    //     case Enter:
-    //         isOn = false;
-    //         break;
-    //
-    //     case Exit:
-    //         isOn = false;
-    //         break;
-    //
-    //     case Capture:;
-    //     }
-    // }
 
     return close();
 }

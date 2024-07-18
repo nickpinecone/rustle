@@ -45,8 +45,8 @@ void menu_update(struct selectmenu *menu, char key)
     }
 
     struct selectitem *selected = menu->items[menu->active];
-    int posX = menu->x + 1 + selected->length;
-    int posY = menu->y + 1 + menu->active;
+    int posX = 1 + selected->length;
+    int posY = 1 + menu->active;
     wmove(menu->raw, posY, posX);
 
     wrefresh(menu->raw);

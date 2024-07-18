@@ -1,5 +1,5 @@
-#ifndef INPUTBOX_H
-#define INPUTBOX_H
+#ifndef SELECTMENU_H
+#define SELECTMENU_H
 
 #include <ncurses.h>
 
