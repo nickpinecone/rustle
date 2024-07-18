@@ -32,10 +32,10 @@ int main()
     menu_update(&menu, ERR);
 
     bool isOn = true;
+    input_focus(&input);
     while (isOn)
     {
         int in = getch();
-        input_focus(&input);
 
         switch (input_capture(&input, in))
         {
@@ -51,6 +51,7 @@ int main()
         }
     }
 
+    menu_focus(&menu);
     while (true)
     {
         int in = getch();

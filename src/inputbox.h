@@ -21,7 +21,7 @@ struct inputbox
     int inY, inX;
     char content[1024];
     int length;
-    bool isFocus;
+    bool focus;
 };
 
 struct inputbox input_create(int y, int x, int width, char* label);

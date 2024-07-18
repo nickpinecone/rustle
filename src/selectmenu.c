@@ -13,7 +13,8 @@ struct selectmenu menu_create(int y, int x, int height, int width, char *label)
     mvwprintw(win, 0, 3, "%s", label);
     wrefresh(win);
 
-    return (struct selectmenu){.raw = win, .height = height, .width = width, .y = y, .x = x, .active = -1, .count = 0};
+    return (struct selectmenu){
+        .raw = win, .height = height, .width = width, .y = y, .x = x, .active = -1, .count = 0, .focus = false};
 }
 
 void menu_add(struct selectmenu *menu, char *label)
@@ -32,11 +33,16 @@ void menu_add(struct selectmenu *menu, char *label)
     menu->count++;
 }
 
+void menu_focus(struct selectmenu *menu)
+{
+    menu->focus = true;
+}
+
 void menu_update(struct selectmenu *menu, char key)
 {
     for (int i = 0; i < menu->count; i++)
     {
-        if (i == menu->active)
+        if (i == menu->active && menu->focus)
         {
             wattron(menu->raw, A_REVERSE);
         }

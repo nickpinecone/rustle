@@ -20,14 +20,14 @@ struct inputbox input_create(int y, int x, int width, char *label)
         .inY = y + 1,
         .inX = x + 1,
         .content = "",
-        .isFocus = false,
+        .focus = false,
         .length = 0,
     };
 }
 
 void input_focus(struct inputbox *input)
 {
-    input->isFocus = true;
+    input->focus = true;
 }
 
 enum instatus input_capture(struct inputbox *input, int key)
@@ -41,12 +41,12 @@ enum instatus input_capture(struct inputbox *input, int key)
         switch (key)
         {
         case KEY_CONFIRM:
-            input->isFocus = false;
+            input->focus = false;
             return Enter;
             break;
 
         case KEY_ESCAPE:
-            input->isFocus = false;
+            input->focus = false;
             return Exit;
             break;
 

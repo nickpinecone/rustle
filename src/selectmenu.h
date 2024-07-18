@@ -16,6 +16,7 @@ struct selectmenu
     int height, width;
     int y, x;
 
+    bool focus;
     int active;
     int count;
     struct selectitem *items[16];
@@ -23,6 +24,7 @@ struct selectmenu
 
 struct selectmenu menu_create(int y, int x, int height, int width, char *label);
 void menu_add(struct selectmenu *menu, char *label);
+void menu_focus(struct selectmenu *menu);
 void menu_update(struct selectmenu *menu, char key);
 
 #endif
