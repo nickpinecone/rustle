@@ -1,6 +1,7 @@
 #include <ncurses.h>
 
-#include "inputbox.h"
+#include "selectmenu.h"
+
 
 void init()
 {
@@ -10,7 +11,7 @@ void init()
     keypad(stdscr, TRUE);
 
     // Non blocking input
-    timeout(100);
+    timeout(0);
 }
 
 int close()
@@ -23,27 +24,39 @@ int main()
 {
     init();
 
-    struct inputbox input = input_create(0, 0, 20, "Search");
+    struct selectmenu menu = menu_create(0, 0, 10, 20, "Stations");
 
-    bool isOn = true;
-    while (isOn)
+    menu_add(&menu, "Code Radio");
+    menu_add(&menu, "Chillofi");
+
+    while (true)
     {
         int in = getch();
-        input_focus(&input);
 
-        switch (input_capture(&input, in))
-        {
-        case Enter:
-            isOn = false;
-            break;
-
-        case Exit:
-            isOn = false;
-            break;
-
-        case Capture:;
-        }
+        menu_update(&menu, in);
     }
+
+    // struct inputbox input = input_create(0, 0, 20, "Search");
+    //
+    // bool isOn = true;
+    // while (isOn)
+    // {
+    //     int in = getch();
+    //     input_focus(&input);
+    //
+    //     switch (input_capture(&input, in))
+    //     {
+    //     case Enter:
+    //         isOn = false;
+    //         break;
+    //
+    //     case Exit:
+    //         isOn = false;
+    //         break;
+    //
+    //     case Capture:;
+    //     }
+    // }
 
     return close();
 }
