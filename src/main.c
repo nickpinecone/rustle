@@ -1,7 +1,9 @@
+#include <mpv/client.h>
 #include <ncurses.h>
 
-#include "inputbox.h"
-#include "selectmenu.h"
+#include "widgets/inputbox.h"
+#include "widgets/keycodes.h"
+#include "widgets/selectmenu.h"
 
 void init()
 {
@@ -24,11 +26,13 @@ int main()
 {
     init();
 
+    mpv_handle *player = mpv_create();
+    mpv_initialize(player);
+
     struct inputbox input = input_create(0, 0, 20, "Search");
     struct selectmenu menu = menu_create(input.y + input.height, 0, 10, 20, "Stations");
 
-    menu_add(&menu, "Code Radio");
-    menu_add(&menu, "Chillofi");
+    menu_add(&menu, "Code Radio", "https://coderadio-admin-v2.freecodecamp.org/listen/coderadio/radio.mp3");
     menu_update(&menu, ERR);
 
     bool isOn = true;
@@ -56,8 +60,25 @@ int main()
     {
         int in = getch();
 
-        menu_update(&menu, in);
+        if (in == KEY_ESCAPE)
+        {
+            break;
+        }
+        else if (in == ' ')
+        {
+            const char *args[] = {"stop", NULL};
+            mpv_command(player, args);
+        }
+
+        struct selectitem *item = menu_update(&menu, in);
+
+        if (item != NULL)
+        {
+            const char *args[] = {"loadfile", item->url, NULL};
+            mpv_command(player, args);
+        }
     }
 
+    mpv_destroy(player);
     return close();
 }

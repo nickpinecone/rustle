@@ -3,9 +3,6 @@
 
 #include <ncurses.h>
 
-#define KEY_ESCAPE 27
-#define KEY_CONFIRM '\n'
-
 enum instatus {
     Capture,
     Enter,

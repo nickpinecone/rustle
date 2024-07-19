@@ -8,6 +8,9 @@ struct selectitem
     int order;
     char label[1024];
     int length;
+
+    // Station url
+    char url[1024];
 };
 
 struct selectmenu
@@ -23,8 +26,8 @@ struct selectmenu
 };
 
 struct selectmenu menu_create(int y, int x, int height, int width, char *label);
-void menu_add(struct selectmenu *menu, char *label);
+void menu_add(struct selectmenu *menu, char *label, char *url);
 void menu_focus(struct selectmenu *menu);
-void menu_update(struct selectmenu *menu, char key);
+struct selectitem *menu_update(struct selectmenu *menu, char key);
 
 #endif

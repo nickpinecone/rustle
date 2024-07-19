@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "selectmenu.h"
+#include "keycodes.h"
 
 struct selectmenu menu_create(int y, int x, int height, int width, char *label)
 {
@@ -17,11 +18,12 @@ struct selectmenu menu_create(int y, int x, int height, int width, char *label)
         .raw = win, .height = height, .width = width, .y = y, .x = x, .active = -1, .count = 0, .focus = false};
 }
 
-void menu_add(struct selectmenu *menu, char *label)
+void menu_add(struct selectmenu *menu, char *label, char *url)
 {
     struct selectitem *item = (struct selectitem *)malloc(sizeof(struct selectitem));
     strcpy(item->label, label);
     item->length = strlen(label);
+    strcpy(item->url, url);
 
     item->order = menu->count + 1;
     if (menu->active == -1)
@@ -38,7 +40,7 @@ void menu_focus(struct selectmenu *menu)
     menu->focus = true;
 }
 
-void menu_update(struct selectmenu *menu, char key)
+struct selectitem *menu_update(struct selectmenu *menu, char key)
 {
     for (int i = 0; i < menu->count; i++)
     {
@@ -73,7 +75,11 @@ void menu_update(struct selectmenu *menu, char key)
             menu->active = menu->count - 1;
         }
         break;
+    case KEY_CONFIRM:
+        return menu->items[menu->active];
     default:
         break;
     }
+
+    return NULL;
 }

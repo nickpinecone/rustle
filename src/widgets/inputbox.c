@@ -1,6 +1,7 @@
 #include <ncurses.h>
 
 #include "inputbox.h"
+#include "keycodes.h"
 
 struct inputbox input_create(int y, int x, int width, char *label)
 {
