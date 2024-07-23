@@ -1,2 +1,2 @@
 # riff
-A terminal radio player written in C
+Terminal radio player written in C
