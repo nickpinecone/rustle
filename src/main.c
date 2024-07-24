@@ -8,8 +8,8 @@
 int main()
 {
     struct mainwindow main = main_init();
-    struct selectmenu menu = menu_create(0, 0, main.height - 3, main.width - 1, "Stations");
-    struct playerbox player = player_create(menu.y + menu.height, 0, main.width - 1);
+    struct selectmenu menu = menu_create(0, 0, main.height - 3, main.width, "Stations");
+    struct playerbox player = player_create(menu.y + menu.height, 0, main.width);
 
     menu_add(&menu, "Code Radio", "https://coderadio-admin-v2.freecodecamp.org/listen/coderadio/radio.mp3");
     menu_add(&menu, "Chillofi", "http://streams.dez.ovh:8000/radio.mp3");
