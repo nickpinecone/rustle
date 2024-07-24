@@ -21,8 +21,7 @@ struct playerbox player_create(int y, int x, int width)
 
 void player_stop(struct playerbox *player)
 {
-    memset(player->name, ' ', strlen(player->name));
-    player->name[player->length] = '\0';
+    player->name[0] = '\0';
     player->length = 0;
     player->pause = true;
 
@@ -30,15 +29,10 @@ void player_stop(struct playerbox *player)
     mpv_command(player->mpv, args);
 }
 
-// TODO needs to override the previous name, otherwide they get stacked
-
 void player_play(struct playerbox *player, struct selectitem *item)
 {
-    memset(player->name, ' ', strlen(player->name));
-    player->name[player->length] = '\0';
     strcpy(player->name, item->label);
     player->length = item->length;
-    player->name[player->length] = ' ';
     player->pause = false;
 
     const char *args[] = {"loadfile", item->url, NULL};
@@ -57,14 +51,17 @@ void _volume_up(struct playerbox *player)
     mpv_command(player->mpv, args);
 }
 
+void _clear(struct playerbox *player)
+{
+    char empty[player->width - 2];
+    memset(empty, ' ', player->width - 2);
+    empty[player->width - 2] = '\0';
+    mvwprintw(player->raw, 1, 1, "%s", empty);
+    wmove(player->raw, 1, 1);
+}
+
 void player_update(struct playerbox *player, int key)
 {
-    mvwprintw(player->raw, 1, 1, "%s", player->name);
-    double result;
-    mpv_get_property(player->mpv, "volume", MPV_FORMAT_DOUBLE, &result);
-    wprintw(player->raw, "%.1f", result);
-    wrefresh(player->raw);
-
     switch (key)
     {
     case ' ':
@@ -79,6 +76,13 @@ void player_update(struct playerbox *player, int key)
     default:
         break;
     }
+
+    _clear(player);
+    wprintw(player->raw, "%s ", player->name);
+    double result;
+    mpv_get_property(player->mpv, "volume", MPV_FORMAT_DOUBLE, &result);
+    wprintw(player->raw, "%.f", result);
+    wrefresh(player->raw);
 }
 
 void player_destroy(struct playerbox *player)

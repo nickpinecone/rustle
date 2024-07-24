@@ -42,22 +42,6 @@ void menu_focus(struct selectmenu *menu)
 
 struct selectitem *menu_update(struct selectmenu *menu, char key)
 {
-    for (int i = 0; i < menu->count; i++)
-    {
-        if (i == menu->active && menu->focus)
-        {
-            wattron(menu->raw, A_REVERSE);
-        }
-        mvwprintw(menu->raw, i + 1, 1, "%s", menu->items[i]->label);
-        wattroff(menu->raw, A_REVERSE);
-    }
-
-    struct selectitem *selected = menu->items[menu->active];
-    int posX = 1 + selected->length;
-    int posY = 1 + menu->active;
-    wmove(menu->raw, posY, posX);
-    wrefresh(menu->raw);
-
     switch (key)
     {
     case 'k':
@@ -79,6 +63,22 @@ struct selectitem *menu_update(struct selectmenu *menu, char key)
     default:
         break;
     }
+
+    for (int i = 0; i < menu->count; i++)
+    {
+        if (i == menu->active && menu->focus)
+        {
+            wattron(menu->raw, A_REVERSE);
+        }
+        mvwprintw(menu->raw, i + 1, 1, "%s", menu->items[i]->label);
+        wattroff(menu->raw, A_REVERSE);
+    }
+
+    struct selectitem *selected = menu->items[menu->active];
+    int posX = 1 + selected->length;
+    int posY = 1 + menu->active;
+    wmove(menu->raw, posY, posX);
+    wrefresh(menu->raw);
 
     return NULL;
 }

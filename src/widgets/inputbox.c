@@ -37,41 +37,38 @@ enum instatus input_capture(struct inputbox *input, int key)
     int posX = input->inX + input->length;
     move(posY, posX);
 
-    if (key != ERR)
+    switch (key)
     {
-        switch (key)
+    case KEY_CONFIRM:
+        input->focus = false;
+        return Enter;
+        break;
+
+    case KEY_ESCAPE:
+        input->focus = false;
+        return Exit;
+        break;
+
+    case KEY_BACKSPACE:
+        if (input->length > 0)
         {
-        case KEY_CONFIRM:
-            input->focus = false;
-            return Enter;
-            break;
-
-        case KEY_ESCAPE:
-            input->focus = false;
-            return Exit;
-            break;
-
-        case KEY_BACKSPACE:
-            if (input->length > 0)
-            {
-                input->length--;
-                input->content[input->length] = ' ';
-            }
-            break;
-
-        default:
-            if (input->length < 1000 && input->length < input->width - 2)
-            {
-                input->content[input->length] = (char)key;
-                input->length++;
-            }
-            break;
+            input->length--;
+            input->content[input->length] = ' ';
         }
+        break;
 
-        mvprintw(input->inY, input->inX, "%s", input->content);
-        wrefresh(input->raw);
-        input->content[input->length] = '\0';
+    default:
+        if (input->length < 1000 && input->length < input->width - 2)
+        {
+            input->content[input->length] = (char)key;
+            input->length++;
+        }
+        break;
     }
+
+    mvprintw(input->inY, input->inX, "%s", input->content);
+    wrefresh(input->raw);
+    input->content[input->length] = '\0';
 
     return Capture;
 }

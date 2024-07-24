@@ -8,7 +8,7 @@ void ncurses_init()
     cbreak();
     noecho();
     
-    timeout(0);
+    timeout(-1);
     curs_set(0);
     keypad(stdscr, TRUE);
 }

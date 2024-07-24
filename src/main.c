@@ -2,8 +2,8 @@
 #include <ncurses.h>
 
 #include "utils/mainwindow.h"
-#include "widgets/selectmenu.h"
 #include "widgets/playerbox.h"
+#include "widgets/selectmenu.h"
 
 int main()
 {
@@ -15,23 +15,27 @@ int main()
     menu_add(&menu, "Chillofi", "http://streams.dez.ovh:8000/radio.mp3");
     menu_focus(&menu);
 
+    int in = ' ';
     while (true)
     {
-        int in = getch();
-
-        if (in == 'q')
+        if (in != ERR)
         {
-            break;
+            if (in == 'q')
+            {
+                break;
+            }
+
+            struct selectitem *item = menu_update(&menu, in);
+
+            if (item != NULL)
+            {
+                player_play(&player, item);
+            }
+
+            player_update(&player, in);
         }
 
-        struct selectitem *item = menu_update(&menu, in);
-
-        if (item != NULL)
-        {
-            player_play(&player, item);
-        }
-
-        player_update(&player, in);
+        in = getch();
     }
 
     return main_close();
