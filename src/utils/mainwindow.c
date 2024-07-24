@@ -7,8 +7,10 @@ void ncurses_init()
     initscr();
     cbreak();
     noecho();
-    keypad(stdscr, TRUE);
+    
     timeout(0);
+    curs_set(0);
+    keypad(stdscr, TRUE);
 }
 
 struct mainwindow main_init()

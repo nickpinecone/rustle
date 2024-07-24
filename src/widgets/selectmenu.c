@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "selectmenu.h"
 #include "keycodes.h"
+#include "selectmenu.h"
 
 struct selectmenu menu_create(int y, int x, int height, int width, char *label)
 {
@@ -56,7 +56,6 @@ struct selectitem *menu_update(struct selectmenu *menu, char key)
     int posX = 1 + selected->length;
     int posY = 1 + menu->active;
     wmove(menu->raw, posY, posX);
-
     wrefresh(menu->raw);
 
     switch (key)
