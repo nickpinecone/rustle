@@ -41,6 +41,13 @@ void _stop(struct playerbox *player, bool clear)
 struct playerbox player_create(int y, int x, int width)
 {
     mpv_handle *mpv = mpv_create();
+
+    // Reconnect on error
+    mpv_set_property_string(mpv, "stream-lavf-o-append", "reconnect_on_http_error=4xx,5xx");
+    mpv_set_property_string(mpv, "stream-lavf-o-append", "reconnect_delay_max=30");
+    mpv_set_property_string(mpv, "stream-lavf-o-append", "reconnect_streamed=yes");
+    mpv_set_property_string(mpv, "stream-lavf-o-append", "reconnect_on_network_error=yes");
+
     mpv_initialize(mpv);
 
     WINDOW *win = newwin(3, width, y, x);
