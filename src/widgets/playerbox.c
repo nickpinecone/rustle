@@ -42,11 +42,11 @@ struct playerbox player_create(int y, int x, int width)
 {
     mpv_handle *mpv = mpv_create();
 
-    // Reconnect on error
-    mpv_set_property_string(mpv, "stream-lavf-o-append", "reconnect_on_http_error=4xx,5xx");
-    mpv_set_property_string(mpv, "stream-lavf-o-append", "reconnect_delay_max=30");
-    mpv_set_property_string(mpv, "stream-lavf-o-append", "reconnect_streamed=yes");
-    mpv_set_property_string(mpv, "stream-lavf-o-append", "reconnect_on_network_error=yes");
+    // TODO initialize config file in xdg_config if it doesnt exist
+    // with the default configuration defined in player/mpv.conf
+
+    int error = mpv_load_config_file(mpv, "{...}/riff/src/player/mpv.conf");
+    printf("Error %d", error);
 
     mpv_initialize(mpv);
 
@@ -82,8 +82,8 @@ void player_toggle(struct playerbox *player)
         sprintf(volume, "%.f", player->prevolume);
     }
 
-    const char *args[] = {"set", "volume", volume, NULL};
-    mpv_command(player->mpv, args);
+    // const char *args[] = {"set", "volume", volume, NULL};
+    // mpv_command(player->mpv, args);
 }
 
 void player_play(struct playerbox *player, struct selectitem *item)
