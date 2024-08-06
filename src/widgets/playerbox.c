@@ -2,6 +2,7 @@
 #include <ncurses.h>
 #include <string.h>
 
+#include "../utils/config.h"
 #include "keycodes.h"
 #include "playerbox.h"
 
@@ -42,12 +43,8 @@ struct playerbox player_create(int y, int x, int width)
 {
     mpv_handle *mpv = mpv_create();
 
-    // TODO initialize config file in xdg_config if it doesnt exist
-    // with the default configuration defined in player/mpv.conf
-
-    int error = mpv_load_config_file(mpv, "{...}/riff/src/player/mpv.conf");
-    printf("Error %d", error);
-
+    config_init();
+    mpv_load_config_file(mpv, config_get_mpv());
     mpv_initialize(mpv);
 
     WINDOW *win = newwin(3, width, y, x);
@@ -82,8 +79,8 @@ void player_toggle(struct playerbox *player)
         sprintf(volume, "%.f", player->prevolume);
     }
 
-    // const char *args[] = {"set", "volume", volume, NULL};
-    // mpv_command(player->mpv, args);
+    const char *args[] = {"set", "volume", volume, NULL};
+    mpv_command(player->mpv, args);
 }
 
 void player_play(struct playerbox *player, struct selectitem *item)

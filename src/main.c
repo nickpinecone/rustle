@@ -13,6 +13,10 @@ int main()
 
     menu_add(&menu, "Code Radio", "https://coderadio-admin-v2.freecodecamp.org/listen/coderadio/radio.mp3");
     menu_add(&menu, "Chillofi", "http://streams.dez.ovh:8000/radio.mp3");
+    menu_add(&menu, "Box Lofi", "https://play.streamafrica.net/lofiradio");
+    menu_add(&menu, "Planet Lofi",
+             "https://www.internet-radio.com/servers/tools/playlistgenerator/?u=http://198.245.60.88:8080/"
+             "listen.pls?sid=1&t=.m3u");
     menu_focus(&menu);
 
     int in = ' ';
