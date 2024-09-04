@@ -28,23 +28,26 @@ struct inputbox input_create(int y, int x, int width, char *label)
 
 void input_focus(struct inputbox *input)
 {
+    curs_set(1);
     input->focus = true;
+
+    int posY = input->inY;
+    int posX = input->inX + input->length;
+    move(posY, posX);
 }
 
 enum instatus input_capture(struct inputbox *input, int key)
 {
-    int posY = input->inY;
-    int posX = input->inX + input->length;
-    move(posY, posX);
-
     switch (key)
     {
     case KEY_CONFIRM:
+        curs_set(0);
         input->focus = false;
         return Enter;
         break;
 
     case KEY_ESCAPE:
+        curs_set(0);
         input->focus = false;
         return Exit;
         break;
@@ -70,5 +73,14 @@ enum instatus input_capture(struct inputbox *input, int key)
     wrefresh(input->raw);
     input->content[input->length] = '\0';
 
+    int posY = input->inY;
+    int posX = input->inX + input->length;
+    move(posY, posX);
+
     return Capture;
+}
+
+void input_destroy(struct inputbox *input)
+{
+    delwin(input->raw);
 }

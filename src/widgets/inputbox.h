@@ -24,5 +24,6 @@ struct inputbox
 struct inputbox input_create(int y, int x, int width, char* label);
 void input_focus(struct inputbox* input);
 enum instatus input_capture(struct inputbox* input, int key);
+void input_destroy(struct inputbox* input);
 
 #endif

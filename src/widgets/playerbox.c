@@ -125,5 +125,6 @@ void player_update(struct playerbox *player, int key)
 
 void player_destroy(struct playerbox *player)
 {
+    delwin(player->raw);
     mpv_destroy(player->mpv);
 }

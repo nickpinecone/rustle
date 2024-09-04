@@ -1,14 +1,19 @@
 #include <mpv/client.h>
 #include <ncurses.h>
+#include <string.h>
 
 #include "utils/mainwindow.h"
+#include "widgets/inputbox.h"
 #include "widgets/playerbox.h"
 #include "widgets/selectmenu.h"
+
+void clean();
 
 int main()
 {
     struct mainwindow main = main_init();
-    struct selectmenu menu = menu_create(0, 0, main.height - 3, main.width, "Stations");
+    struct inputbox input = input_create(0, 0, main.width, "Search");
+    struct selectmenu menu = menu_create(input.height, 0, main.height - input.height - 3, main.width, "Stations");
     struct playerbox player = player_create(menu.y + menu.height, 0, main.width);
 
     menu_add(&menu, "Code Radio", "https://coderadio-admin-v2.freecodecamp.org/listen/coderadio/radio.mp3");
@@ -20,27 +25,46 @@ int main()
     menu_focus(&menu);
 
     int in = ' ';
+    char filter[1024] = "";
     while (true)
     {
         if (in != ERR)
         {
-            if (in == 'q')
+            if (input.focus)
             {
-                break;
+                enum instatus state = input_capture(&input, in);
+
+                if (state == Enter)
+                {
+                    strcpy(filter, input.content);
+                }
             }
-
-            struct selectitem *item = menu_update(&menu, in);
-
-            if (item != NULL)
+            else
             {
-                player_play(&player, item);
-            }
+                if (in == 'q')
+                {
+                    break;
+                }
+                else if (in == 'f')
+                {
+                    input_focus(&input);
+                }
 
-            player_update(&player, in);
+                struct selectitem *item = menu_update(&menu, in, filter);
+
+                if (item != NULL)
+                {
+                    player_play(&player, item);
+                }
+
+                player_update(&player, in);
+            }
         }
 
         in = getch();
     }
 
+    menu_destroy(&menu);
+    player_destroy(&player);
     return main_close();
 }

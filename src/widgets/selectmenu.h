@@ -28,6 +28,7 @@ struct selectmenu
 struct selectmenu menu_create(int y, int x, int height, int width, char *label);
 void menu_add(struct selectmenu *menu, char *label, char *url);
 void menu_focus(struct selectmenu *menu);
-struct selectitem *menu_update(struct selectmenu *menu, char key);
+struct selectitem *menu_update(struct selectmenu *menu, char key, char *filter);
+void menu_destroy(struct selectmenu *menu);
 
 #endif

@@ -40,7 +40,7 @@ void menu_focus(struct selectmenu *menu)
     menu->focus = true;
 }
 
-struct selectitem *menu_update(struct selectmenu *menu, char key)
+struct selectitem *menu_update(struct selectmenu *menu, char key, char *filter)
 {
     switch (key)
     {
@@ -81,4 +81,9 @@ struct selectitem *menu_update(struct selectmenu *menu, char key)
     wrefresh(menu->raw);
 
     return NULL;
+}
+
+void menu_destroy(struct selectmenu *menu)
+{
+    delwin(menu->raw);
 }

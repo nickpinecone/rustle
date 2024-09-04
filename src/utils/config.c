@@ -31,6 +31,7 @@ void config_init()
         mkdir(_config_dir, S_IRWXU);
         FILE *mpv_conf = fopen(_mpv_path, "w");
         fprintf(mpv_conf, "%s", _generate_mpv_config());
+        fclose(mpv_conf);
     }
 }
 
