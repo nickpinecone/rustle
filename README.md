@@ -1,5 +1,5 @@
 # Riff
-Terminal radio player written in C
+Minimal and lightweight terminal radio player
 
 # Build
 ```
@@ -10,7 +10,8 @@ make run
 ## Dependencies
 - ncurses
 - mpv
+- jansson
 
 ```
-sudo dnf install ncurses-devel mpv-devel
+sudo dnf install ncurses-devel mpv-devel jansson-devel
 ```
