@@ -5,8 +5,9 @@
 
 struct main_win {
     WINDOW *win;
-    int width;
+
     int height;
+    int width;
 };
 
 struct main_win main_win_init();
