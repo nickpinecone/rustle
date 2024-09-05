@@ -4,6 +4,11 @@
 #include <jansson.h>
 #include <ncurses.h>
 
+enum direction {
+    UP,
+    DOWN,
+};
+
 struct menu_item {
     const char *name;
     const char *url;
@@ -21,8 +26,9 @@ struct menu {
     struct menu_item *items;
     int items_len;
 
-    struct menu_item **view;
     int view_len;
+    int view_start;
+    int view_i;
 };
 
 struct menu menu_create(int y, int x, int height, int width);

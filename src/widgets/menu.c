@@ -1,9 +1,12 @@
 #include <jansson.h>
+#include <memory.h>
 #include <ncurses.h>
 #include <stdio.h>
 
 #include "../utils/conf.h"
 #include "menu.h"
+
+char blank[1024];
 
 void load_conf(struct menu *menu) {
     json_error_t error;
@@ -74,25 +77,54 @@ struct menu menu_create(int y, int x, int height, int width) {
         .y = y,
         .x = x,
     };
-    load_conf(&menu);
 
-    int max = menu.items_len > height ? height : menu.items_len;
-    menu.view = malloc(sizeof(struct menu_item *) * max);
+    load_conf(&menu);
+    memset(blank, ' ', sizeof(char) * width - 2);
+
+    int max = menu.items_len > height ? height - 2 : menu.items_len;
+    menu.view_start = 0;
+    menu.view_i = 0;
     menu.view_len = max;
 
-    for (int i = 0; i < max; i++) {
-        menu.view[i] = &menu.items[i];
-    }
-
     return menu;
+}
+
+void menu_scroll(struct menu *menu, enum direction direction) {
+    if (menu->items_len > menu->view_len) {
+        if (direction == UP) {
+            if (menu->view_i > menu->view_len / 2) {
+                menu->view_start++;
+            }
+
+            if (menu->view_start > menu->items_len - menu->view_len) {
+                menu->view_start = menu->items_len - menu->view_len;
+            }
+        } else if (direction == DOWN) {
+            if (menu->view_i < menu->items_len - menu->view_len / 2) {
+                menu->view_start--;
+            }
+
+            if (menu->view_start < 0) {
+                menu->view_start = 0;
+            }
+        }
+    }
 }
 
 struct menu_item *menu_update(struct menu *menu, int key) {
     switch (key) {
     case 'k':
+        if (menu->view_i > 0) {
+            menu->view_i--;
+        }
+        menu_scroll(menu, DOWN);
         break;
 
     case 'j':
+        if (menu->view_i < menu->items_len - 1) {
+            menu->view_i++;
+        }
+        menu_scroll(menu, UP);
         break;
 
     case KEY_ENTER:
@@ -103,7 +135,14 @@ struct menu_item *menu_update(struct menu *menu, int key) {
     }
 
     for (int i = 0; i < menu->view_len; i++) {
-        mvwprintw(menu->win, 1 + i, 1, "%s", menu->view[i]->name);
+        mvwprintw(menu->win, 1 + i, 1, "%s", blank);
+
+        if (menu->view_start + i == menu->view_i) {
+            wattron(menu->win, A_REVERSE);
+        }
+        mvwprintw(menu->win, 1 + i, 1, "%s",
+                  menu->items[i + menu->view_start].name);
+        wattroff(menu->win, A_REVERSE);
     }
     wrefresh(menu->win);
 
@@ -113,6 +152,5 @@ struct menu_item *menu_update(struct menu *menu, int key) {
 void menu_destroy(struct menu *menu) {
     json_decref(menu->root);
     free(menu->items);
-    free(menu->view);
     delwin(menu->win);
 }
