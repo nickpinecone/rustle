@@ -18,10 +18,8 @@ struct menu {
     WINDOW *win;
     json_t *root;
 
-    int height;
-    int width;
-    int y;
-    int x;
+    int height, width;
+    int y, x;
 
     struct menu_item *items;
     int items_len;

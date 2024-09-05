@@ -5,6 +5,7 @@
 
 #include "../utils/conf.h"
 #include "menu.h"
+#include "keys.h"
 
 char blank[1024];
 
@@ -127,8 +128,8 @@ struct menu_item *menu_update(struct menu *menu, int key) {
         menu_scroll(menu, UP);
         break;
 
-    case KEY_ENTER:
-        break;
+    case KEY_CONFIRM:
+        return &menu->items[menu->view_i];
 
     default:
         break;
