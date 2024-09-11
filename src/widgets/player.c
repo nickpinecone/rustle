@@ -112,6 +112,19 @@ void player_update(struct player *player, int key) {
     wrefresh(player->win);
 }
 
+void player_resize(struct player *player, int height, int width) {
+    wclear(player->win);
+    wresize(player->win, 3, width);
+    mvwin(player->win, height - 3, 0);
+    box(player->win, 0, 0);
+    wrefresh(player->win);
+
+    memset(blank2, '\0', sizeof(char) * 1024);
+    memset(blank2, ' ', sizeof(char) * width - 2);
+
+    player_update(player, -1);
+}
+
 void player_destroy(struct player *player) {
     mpv_destroy(player->mpv);
     delwin(player->win);

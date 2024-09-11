@@ -4,8 +4,8 @@
 #include <stdio.h>
 
 #include "../utils/conf.h"
-#include "menu.h"
 #include "keys.h"
+#include "menu.h"
 
 char blank[1024];
 
@@ -88,6 +88,23 @@ struct menu menu_create(int y, int x, int height, int width) {
     menu.view_len = max;
 
     return menu;
+}
+
+void menu_resize(struct menu *menu, int height, int width) {
+    wclear(menu->win);
+    wresize(menu->win, height - 3, width);
+    box(menu->win, 0, 0);
+    wrefresh(menu->win);
+
+    memset(blank, '\0', sizeof(char) * 1024);
+    memset(blank, ' ', sizeof(char) * width - 2);
+
+    int max = menu->items_len > height ? height - 3 - 2 : menu->items_len;
+    menu->view_start = 0;
+    menu->view_i = 0;
+    menu->view_len = max;
+
+    menu_update(menu, -1);
 }
 
 void menu_scroll(struct menu *menu, enum direction direction) {

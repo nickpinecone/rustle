@@ -22,6 +22,7 @@ struct player {
 struct player player_create(int y, int x, int width);
 void player_play(struct player *player, struct menu_item *item);
 void player_update(struct player *player, int key);
+void player_resize(struct player *player, int height, int width);
 void player_destroy(struct player *player);
 
 #endif

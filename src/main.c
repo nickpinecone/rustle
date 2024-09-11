@@ -22,6 +22,10 @@ int main() {
 
         if (key == 'q') {
             break;
+        } else if (key == KEY_RESIZE) {
+            main_resize(&main_win);
+            menu_resize(&menu, main_win.height, main_win.width);
+            player_resize(&player, main_win.height, main_win.width);
         }
 
         key = getch();

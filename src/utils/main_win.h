@@ -11,6 +11,7 @@ struct main_win {
 };
 
 struct main_win main_win_init();
+void main_resize(struct main_win *main_win);
 int main_win_close();
 
 #endif

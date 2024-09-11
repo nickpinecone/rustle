@@ -31,6 +31,7 @@ struct menu {
 
 struct menu menu_create(int y, int x, int height, int width);
 struct menu_item *menu_update(struct menu *menu, int key);
+void menu_resize(struct menu *menu, int height, int width);
 void menu_destroy(struct menu *menu);
 
 #endif

@@ -23,6 +23,16 @@ struct main_win main_win_init() {
     return (struct main_win){.win = stdscr, .height = y, .width = x};
 }
 
+void main_resize(struct main_win *main_win) {
+    clear();
+    refresh();
+
+    int y, x;
+    getmaxyx(stdscr, y, x);
+    main_win->height = y;
+    main_win->width = x;
+}
+
 int main_win_close() {
     endwin();
     return 0;
