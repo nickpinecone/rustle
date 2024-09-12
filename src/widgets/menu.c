@@ -3,21 +3,20 @@
 #include <ncurses.h>
 #include <stdio.h>
 
-#include "../utils/conf.h"
 #include "keys.h"
 #include "menu.h"
 
-void m_clean(struct menu *menu, int i) {
+void menu_clean(struct menu *menu, int i) {
     char blank[menu->width - 1];
     memset(blank, ' ', menu->width - 2);
     blank[menu->width - 2] = '\0';
     mvwprintw(menu->win, i, 1, "%s", blank);
 }
 
-void load_conf(struct menu *menu) {
+void menu_load_conf(struct menu *menu, struct conf *conf) {
     json_error_t error;
 
-    menu->root = json_load_file(conf_get_riff(), 0, &error);
+    menu->root = json_load_file(conf->riff_path, 0, &error);
 
     if (!menu->root) {
         fprintf(stderr, "config error: on line %d: %s\n", error.line,
@@ -69,8 +68,8 @@ void load_conf(struct menu *menu) {
     }
 }
 
-struct menu menu_create(int y, int x, int height, int width) {
-    WINDOW *win = newwin(height, width, y, x);
+struct menu menu_create(struct main_win *main_win, struct conf *conf) {
+    WINDOW *win = newwin(main_win->height - 3, main_win->width, 0, 0);
     refresh();
 
     box(win, 0, 0);
@@ -78,15 +77,16 @@ struct menu menu_create(int y, int x, int height, int width) {
 
     struct menu menu = (struct menu){
         .win = win,
-        .height = height,
-        .width = width,
-        .y = y,
-        .x = x,
+        .height = main_win->height - 3,
+        .width = main_win->width,
+        .y = 0,
+        .x = 0,
     };
 
-    load_conf(&menu);
+    menu_load_conf(&menu, conf);
 
-    int max = menu.items_len > height ? height - 2 : menu.items_len;
+    int max =
+        menu.items_len > menu.height - 2 ? menu.height - 2 : menu.items_len;
     menu.view_start = 0;
     menu.view_i = 0;
     menu.view_len = max;
@@ -104,16 +104,17 @@ void menu_bound(struct menu *menu) {
     }
 }
 
-void menu_resize(struct menu *menu, int height, int width) {
+void menu_resize(struct menu *menu, struct main_win *main_win) {
     wclear(menu->win);
-    wresize(menu->win, height - 3, width);
+    wresize(menu->win, main_win->height - 3, main_win->width);
     box(menu->win, 0, 0);
     wrefresh(menu->win);
 
-    menu->height = height - 3;
-    menu->width = width;
+    menu->height = main_win->height - 3;
+    menu->width = main_win->width;
 
-    int max = menu->items_len > height ? height - 3 - 2 : menu->items_len;
+    int max =
+        menu->items_len > menu->height - 2 ? menu->height - 2 : menu->items_len;
     menu->view_len = max;
     menu->view_start = menu->view_i - max / 2;
 
@@ -161,7 +162,7 @@ struct menu_item *menu_update(struct menu *menu, int key) {
     }
 
     for (int i = 0; i < menu->view_len; i++) {
-        m_clean(menu, i + 1);
+        menu_clean(menu, i + 1);
 
         if (menu->view_start + i == menu->view_i) {
             wattron(menu->win, A_REVERSE);

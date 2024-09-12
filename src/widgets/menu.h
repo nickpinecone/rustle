@@ -4,6 +4,9 @@
 #include <jansson.h>
 #include <ncurses.h>
 
+#include "../utils/conf.h"
+#include "../utils/main_win.h"
+
 enum direction {
     UP,
     DOWN,
@@ -29,9 +32,9 @@ struct menu {
     int view_i;
 };
 
-struct menu menu_create(int y, int x, int height, int width);
+struct menu menu_create(struct main_win *main_win, struct conf *conf);
 struct menu_item *menu_update(struct menu *menu, int key);
-void menu_resize(struct menu *menu, int height, int width);
+void menu_resize(struct menu *menu, struct main_win *main_win);
 void menu_destroy(struct menu *menu);
 
 #endif

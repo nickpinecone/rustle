@@ -1,9 +1,8 @@
 #include <ncurses.h>
 
-#include "conf.h"
 #include "main_win.h"
 
-void ncurses_init() {
+struct main_win main_win_init() {
     initscr();
     cbreak();
     noecho();
@@ -11,11 +10,6 @@ void ncurses_init() {
     timeout(-1);
     curs_set(0);
     keypad(stdscr, TRUE);
-}
-
-struct main_win main_win_init() {
-    ncurses_init();
-    conf_init();
 
     int y, x;
     getmaxyx(stdscr, y, x);
@@ -23,7 +17,7 @@ struct main_win main_win_init() {
     return (struct main_win){.win = stdscr, .height = y, .width = x};
 }
 
-void main_resize(struct main_win *main_win) {
+void main_win_resize(struct main_win *main_win) {
     clear();
     refresh();
 

@@ -7,11 +7,6 @@
 
 #include "conf.h"
 
-char _home_dir[1024];
-char _config_dir[1024];
-char _mpv_path[1024];
-char _conf_path[1024];
-
 char *conf_gen_mpv() {
     return "stream-lavf-o-append=timeout=10000000\n\
 stream-lavf-o-append=reconnect_on_http_error=4xx,5xx\n\
@@ -29,24 +24,47 @@ char *conf_gen_riff() {
 ]\n";
 }
 
-void conf_init() {
-    strcpy(_home_dir, getenv("HOME"));
-    sprintf(_config_dir, "%s/.config/riff/", _home_dir);
-    sprintf(_mpv_path, "%s/mpv.conf", _config_dir);
-    sprintf(_conf_path, "%s/riff.json", _config_dir);
+struct conf conf_init() {
+    char *home_dir = getenv("HOME");
+    char *conf_part = "/.config/riff/";
+    char *mpv_part = "mpv.conf";
+    char *riff_part = "riff.json";
 
-    if (stat(_config_dir, &(struct stat){}) == -1) {
-        mkdir(_config_dir, S_IRWXU);
+    char *conf_dir =
+        malloc(sizeof(char) * (strlen(home_dir) + strlen(conf_part) + 1));
+    sprintf(conf_dir, "%s%s", home_dir, conf_part);
 
-        FILE *mpv_conf = fopen(_mpv_path, "w");
+    char *mpv_path =
+        malloc(sizeof(char) *
+               (strlen(home_dir) + strlen(conf_part) + strlen(mpv_part) + 1));
+    sprintf(mpv_path, "%s%s%s", home_dir, conf_part, mpv_part);
+
+    char *riff_path =
+        malloc(sizeof(char) *
+               (strlen(home_dir) + strlen(conf_part) + strlen(riff_part) + 1));
+    sprintf(riff_path, "%s%s%s", home_dir, conf_part, riff_part);
+
+    if (stat(conf_dir, &(struct stat){}) == -1) {
+        mkdir(conf_dir, S_IRWXU);
+
+        FILE *mpv_conf = fopen(mpv_path, "w");
         fprintf(mpv_conf, "%s", conf_gen_mpv());
         fclose(mpv_conf);
 
-        FILE *example_conf = fopen(_conf_path, "w");
-        fprintf(example_conf, "%s", conf_gen_riff());
-        fclose(example_conf);
+        FILE *riff_conf = fopen(riff_path, "w");
+        fprintf(riff_conf, "%s", conf_gen_riff());
+        fclose(riff_conf);
     }
+
+    free(conf_dir);
+
+    return (struct conf){
+        .mpv_path = mpv_path,
+        .riff_path = riff_path,
+    };
 }
 
-char *conf_get_mpv() { return _mpv_path; }
-char *conf_get_riff() { return _conf_path; }
+void conf_destroy(struct conf *conf) {
+    free(conf->mpv_path);
+    free(conf->riff_path);
+}

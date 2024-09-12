@@ -1,8 +1,12 @@
 #ifndef CONF_H
 #define CONF_H
 
-void conf_init();
-char *conf_get_mpv();
-char *conf_get_riff();
+struct conf {
+    char *mpv_path;
+    char *riff_path;
+};
+
+struct conf conf_init();
+void conf_destroy(struct conf *conf);
 
 #endif

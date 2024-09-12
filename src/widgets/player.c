@@ -2,37 +2,36 @@
 #include <ncurses.h>
 #include <string.h>
 
-#include "../utils/conf.h"
 #include "keys.h"
 #include "player.h"
 
-void p_clean(struct player *player) {
+void player_clean(struct player *player) {
     char blank[player->width - 1];
     memset(blank, ' ', player->width - 2);
     blank[player->width - 2] = '\0';
     mvwprintw(player->win, 1, 1, "%s", blank);
 }
 
-void stop(struct player *player, bool clear) {
+void player_stop(struct player *player, bool clear) {
     if (clear) {
-        strcpy(player->name, "");
+        player->name = "";
     }
 
     const char *args[] = {"stop", NULL};
     mpv_command(player->mpv, args);
 }
 
-void volume_down(struct player *player) {
+void player_volume_down(struct player *player) {
     const char *args[] = {"add", "volume", "-1", NULL};
     mpv_command(player->mpv, args);
 }
 
-void volume_up(struct player *player) {
+void player_volume_up(struct player *player) {
     const char *args[] = {"add", "volume", "+1", NULL};
     mpv_command(player->mpv, args);
 }
 
-void toggle(struct player *player) {
+void player_toggle(struct player *player) {
     player->paused = !player->paused;
     char volume[1024];
 
@@ -48,32 +47,33 @@ void toggle(struct player *player) {
     mpv_command(player->mpv, args);
 }
 
-struct player player_create(int y, int x, int width) {
+struct player player_create(struct main_win *main_win, struct conf *conf) {
     mpv_handle *mpv = mpv_create();
 
-    mpv_load_config_file(mpv, conf_get_mpv());
+    mpv_load_config_file(mpv, conf->mpv_path);
     mpv_initialize(mpv);
 
-    WINDOW *win = newwin(3, width, y, x);
+    WINDOW *win = newwin(3, main_win->width, main_win->height - 3, 0);
     refresh();
 
     box(win, 0, 0);
     wrefresh(win);
 
     return (struct player){.win = win,
-                           .y = y,
-                           .x = x,
-                           .width = width,
+                           .y = main_win->height - 3,
+                           .x = 0,
+                           .width = main_win->width,
                            .height = 3,
                            .mpv = mpv,
+                           .name = "",
                            .paused = true,
                            .prevolume = 100};
 }
 
 void player_play(struct player *player, struct menu_item *item) {
-    stop(player, false);
+    player_stop(player, false);
 
-    strcpy(player->name, item->name);
+    player->name = item->name;
     player->paused = false;
 
     const char *args[] = {"loadfile", item->url, NULL};
@@ -83,26 +83,26 @@ void player_play(struct player *player, struct menu_item *item) {
 void player_update(struct player *player, int key) {
     switch (key) {
     case KEY_ESCAPE:
-        stop(player, true);
+        player_stop(player, true);
         break;
 
     case ' ':
-        toggle(player);
+        player_toggle(player);
         break;
 
     case 'n':
-        volume_down(player);
+        player_volume_down(player);
         break;
 
     case 'p':
-        volume_up(player);
+        player_volume_up(player);
         break;
 
     default:
         break;
     }
 
-    p_clean(player);
+    player_clean(player);
     mvwprintw(player->win, 1, 1, "%s", player->name);
 
     if (strcmp(player->name, "") != 0) {
@@ -115,15 +115,15 @@ void player_update(struct player *player, int key) {
     wrefresh(player->win);
 }
 
-void player_resize(struct player *player, int height, int width) {
+void player_resize(struct player *player, struct main_win *main_win) {
     wclear(player->win);
-    wresize(player->win, 3, width);
-    mvwin(player->win, height - 3, 0);
+    wresize(player->win, 3, main_win->width);
+    mvwin(player->win, main_win->height - 3, 0);
     box(player->win, 0, 0);
     wrefresh(player->win);
 
-    player->width = width;
-    player->y = height - 3;
+    player->width = main_win->width;
+    player->y = main_win->height - 3;
     player_update(player, -1);
 }
 

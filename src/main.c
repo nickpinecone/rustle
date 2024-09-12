@@ -1,13 +1,15 @@
 #include <ncurses.h>
 
+#include "utils/conf.h"
 #include "utils/main_win.h"
 #include "widgets/menu.h"
 #include "widgets/player.h"
 
 int main() {
+    struct conf conf = conf_init();
     struct main_win main_win = main_win_init();
-    struct menu menu = menu_create(0, 0, main_win.height - 3, main_win.width);
-    struct player player = player_create(menu.height, 0, main_win.width);
+    struct menu menu = menu_create(&main_win, &conf);
+    struct player player = player_create(&main_win, &conf);
 
     int key = 0;
 
@@ -23,14 +25,16 @@ int main() {
         if (key == 'q') {
             break;
         } else if (key == KEY_RESIZE) {
-            main_resize(&main_win);
-            menu_resize(&menu, main_win.height, main_win.width);
-            player_resize(&player, main_win.height, main_win.width);
+            main_win_resize(&main_win);
+            menu_resize(&menu, &main_win);
+            player_resize(&player, &main_win);
         }
 
         key = getch();
     }
 
+    conf_destroy(&conf);
     menu_destroy(&menu);
+    player_destroy(&player);
     return main_win_close();
 }
