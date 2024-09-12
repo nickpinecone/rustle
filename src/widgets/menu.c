@@ -167,7 +167,7 @@ struct menu_item *menu_update(struct menu *menu, int key) {
         if (menu->view_start + i == menu->view_i) {
             wattron(menu->win, A_REVERSE);
         }
-        mvwprintw(menu->win, 1 + i, 1, "%s",
+        mvwprintw(menu->win, 1 + i, 1, "%.*s", menu->width - 2,
                   menu->items[i + menu->view_start].name);
         wattroff(menu->win, A_REVERSE);
     }

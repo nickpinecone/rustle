@@ -103,7 +103,7 @@ void player_update(struct player *player, int key) {
     }
 
     player_clean(player);
-    mvwprintw(player->win, 1, 1, "%s", player->name);
+    mvwprintw(player->win, 1, 1, "%.*s", player->width - 2 - 4, player->name);
 
     if (strcmp(player->name, "") != 0) {
         wprintw(player->win, " ");
