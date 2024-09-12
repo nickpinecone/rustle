@@ -50,7 +50,11 @@ void player_toggle(struct player *player) {
 struct player player_create(struct main_win *main_win, struct conf *conf) {
     mpv_handle *mpv = mpv_create();
 
-    mpv_load_config_file(mpv, conf->mpv_path);
+    int mpv_error = mpv_load_config_file(mpv, conf->mpv_path);
+    if (mpv_error != 0) {
+        printf("mpv error %d: could not load mpv config file", mpv_error);
+        exit(1);
+    }
     mpv_initialize(mpv);
 
     WINDOW *win = newwin(3, main_win->width, main_win->height - 3, 0);

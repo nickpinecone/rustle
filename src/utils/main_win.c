@@ -3,10 +3,10 @@
 #include "main_win.h"
 
 struct main_win main_win_init() {
+    // Initialize ncurses
     initscr();
     cbreak();
     noecho();
-
     timeout(-1);
     curs_set(0);
     keypad(stdscr, TRUE);

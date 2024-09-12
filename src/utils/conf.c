@@ -26,12 +26,27 @@ char *conf_gen_riff() {
 
 struct conf conf_init() {
     char *home_dir = getenv("HOME");
+
+    if (home_dir == NULL) {
+        printf("error: HOME export variable is not defined");
+        exit(1);
+    }
+
     char *conf_part = "/.config/riff/";
     char *mpv_part = "mpv.conf";
     char *riff_part = "riff.json";
 
+    // Check for existance of ~/.config/ folder
     char *conf_dir =
         malloc(sizeof(char) * (strlen(home_dir) + strlen(conf_part) + 1));
+    sprintf(conf_dir, "%s%s", home_dir, "/.config/");
+
+    // Create one if not there
+    if (stat(conf_dir, &(struct stat){}) == -1) {
+        mkdir(conf_dir, S_IRWXU);
+    }
+
+    // Replace conf_dir with the full path
     sprintf(conf_dir, "%s%s", home_dir, conf_part);
 
     char *mpv_path =
