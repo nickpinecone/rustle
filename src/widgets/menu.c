@@ -7,7 +7,12 @@
 #include "keys.h"
 #include "menu.h"
 
-char blank[1024];
+void m_clean(struct menu *menu, int i) {
+    char blank[menu->width - 1];
+    memset(blank, ' ', menu->width - 2);
+    blank[menu->width - 2] = '\0';
+    mvwprintw(menu->win, i, 1, "%s", blank);
+}
 
 void load_conf(struct menu *menu) {
     json_error_t error;
@@ -80,7 +85,6 @@ struct menu menu_create(int y, int x, int height, int width) {
     };
 
     load_conf(&menu);
-    memset(blank, ' ', sizeof(char) * width - 2);
 
     int max = menu.items_len > height ? height - 2 : menu.items_len;
     menu.view_start = 0;
@@ -90,20 +94,30 @@ struct menu menu_create(int y, int x, int height, int width) {
     return menu;
 }
 
+void menu_bound(struct menu *menu) {
+    if (menu->view_start > menu->items_len - menu->view_len) {
+        menu->view_start = menu->items_len - menu->view_len;
+    }
+
+    if (menu->view_start < 0) {
+        menu->view_start = 0;
+    }
+}
+
 void menu_resize(struct menu *menu, int height, int width) {
     wclear(menu->win);
     wresize(menu->win, height - 3, width);
     box(menu->win, 0, 0);
     wrefresh(menu->win);
 
-    memset(blank, '\0', sizeof(char) * 1024);
-    memset(blank, ' ', sizeof(char) * width - 2);
+    menu->height = height - 3;
+    menu->width = width;
 
     int max = menu->items_len > height ? height - 3 - 2 : menu->items_len;
-    menu->view_start = 0;
-    menu->view_i = 0;
     menu->view_len = max;
+    menu->view_start = menu->view_i - max / 2;
 
+    menu_bound(menu);
     menu_update(menu, -1);
 }
 
@@ -113,19 +127,13 @@ void menu_scroll(struct menu *menu, enum direction direction) {
             if (menu->view_i > menu->view_len / 2) {
                 menu->view_start++;
             }
-
-            if (menu->view_start > menu->items_len - menu->view_len) {
-                menu->view_start = menu->items_len - menu->view_len;
-            }
         } else if (direction == DOWN) {
             if (menu->view_i < menu->items_len - menu->view_len / 2) {
                 menu->view_start--;
             }
-
-            if (menu->view_start < 0) {
-                menu->view_start = 0;
-            }
         }
+
+        menu_bound(menu);
     }
 }
 
@@ -153,7 +161,7 @@ struct menu_item *menu_update(struct menu *menu, int key) {
     }
 
     for (int i = 0; i < menu->view_len; i++) {
-        mvwprintw(menu->win, 1 + i, 1, "%s", blank);
+        m_clean(menu, i + 1);
 
         if (menu->view_start + i == menu->view_i) {
             wattron(menu->win, A_REVERSE);

@@ -6,7 +6,12 @@
 #include "keys.h"
 #include "player.h"
 
-char blank2[1024];
+void p_clean(struct player *player) {
+    char blank[player->width - 1];
+    memset(blank, ' ', player->width - 2);
+    blank[player->width - 2] = '\0';
+    mvwprintw(player->win, 1, 1, "%s", blank);
+}
 
 void stop(struct player *player, bool clear) {
     if (clear) {
@@ -55,8 +60,6 @@ struct player player_create(int y, int x, int width) {
     box(win, 0, 0);
     wrefresh(win);
 
-    memset(blank2, ' ', sizeof(char) * width - 2);
-
     return (struct player){.win = win,
                            .y = y,
                            .x = x,
@@ -99,7 +102,7 @@ void player_update(struct player *player, int key) {
         break;
     }
 
-    mvwprintw(player->win, 1, 1, "%s", blank2);
+    p_clean(player);
     mvwprintw(player->win, 1, 1, "%s", player->name);
 
     if (strcmp(player->name, "") != 0) {
@@ -119,9 +122,8 @@ void player_resize(struct player *player, int height, int width) {
     box(player->win, 0, 0);
     wrefresh(player->win);
 
-    memset(blank2, '\0', sizeof(char) * 1024);
-    memset(blank2, ' ', sizeof(char) * width - 2);
-
+    player->width = width;
+    player->y = height - 3;
     player_update(player, -1);
 }
 
