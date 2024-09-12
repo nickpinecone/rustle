@@ -1,6 +1,20 @@
 # Riff
 Minimal and lightweight terminal radio player
 
+![image](image.png)
+
+# Controls
+| Key           | Description   |
+| ------------- | ------------- |
+| q             | quit          |
+| j             | scroll down   |
+| k             | scroll up     |
+| n             | volume down   |
+| p             | volume up     |
+| space         | toggle volume |
+| enter         | play station  |
+| escape        | stop station  |
+
 # Config
 Default directory for config files:
 
@@ -20,7 +34,7 @@ stream-lavf-o-append=reconnect_on_network_error=yes
 
 - ```riff.json``` - used for specifying the stations
 
-```
+```json
 [
     {
         "name": "Code Radio",
@@ -30,7 +44,7 @@ stream-lavf-o-append=reconnect_on_network_error=yes
 ```
 
 # Build
-```
+```fish
 make
 make run
 ```
