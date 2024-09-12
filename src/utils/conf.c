@@ -24,7 +24,7 @@ char *conf_gen_riff() {
 ]\n";
 }
 
-struct conf conf_init() {
+char *conf_get_home_dir() {
     char *home_dir = getenv("HOME");
 
     if (home_dir == NULL) {
@@ -32,9 +32,11 @@ struct conf conf_init() {
         exit(1);
     }
 
+    return home_dir;
+}
+
+char *conf_get_conf_dir(char *home_dir) {
     char *conf_part = "/.config/riff/";
-    char *mpv_part = "mpv.conf";
-    char *riff_part = "riff.json";
 
     // Check for existance of ~/.config/ folder
     char *conf_dir =
@@ -49,15 +51,23 @@ struct conf conf_init() {
     // Replace conf_dir with the full path
     sprintf(conf_dir, "%s%s", home_dir, conf_part);
 
+    return conf_dir;
+}
+
+struct conf conf_init() {
+    char *home_dir = conf_get_home_dir();
+    char *conf_dir = conf_get_conf_dir(home_dir);
+
+    char *mpv_part = "mpv.conf";
+    char *riff_part = "riff.json";
+
     char *mpv_path =
-        malloc(sizeof(char) *
-               (strlen(home_dir) + strlen(conf_part) + strlen(mpv_part) + 1));
-    sprintf(mpv_path, "%s%s%s", home_dir, conf_part, mpv_part);
+        malloc(sizeof(char) * (strlen(conf_dir) + strlen(mpv_part) + 1));
+    sprintf(mpv_path, "%s%s", conf_dir, mpv_part);
 
     char *riff_path =
-        malloc(sizeof(char) *
-               (strlen(home_dir) + strlen(conf_part) + strlen(riff_part) + 1));
-    sprintf(riff_path, "%s%s%s", home_dir, conf_part, riff_part);
+        malloc(sizeof(char) * (strlen(conf_dir) + strlen(riff_part) + 1));
+    sprintf(riff_path, "%s%s", conf_dir, riff_part);
 
     if (stat(conf_dir, &(struct stat){}) == -1) {
         mkdir(conf_dir, S_IRWXU);

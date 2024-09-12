@@ -68,6 +68,11 @@ void menu_load_conf(struct menu *menu, struct conf *conf) {
     }
 }
 
+int menu_get_view_len(struct menu *menu) {
+    return menu->items_len > menu->height - 2 ? menu->height - 2
+                                              : menu->items_len;
+}
+
 struct menu menu_create(struct main_win *main_win, struct conf *conf) {
     WINDOW *win = newwin(main_win->height - 3, main_win->width, 0, 0);
     refresh();
@@ -85,11 +90,10 @@ struct menu menu_create(struct main_win *main_win, struct conf *conf) {
 
     menu_load_conf(&menu, conf);
 
-    int max =
-        menu.items_len > menu.height - 2 ? menu.height - 2 : menu.items_len;
+    int view_len = menu_get_view_len(&menu);
     menu.view_start = 0;
     menu.view_i = 0;
-    menu.view_len = max;
+    menu.view_len = view_len;
 
     return menu;
 }
@@ -104,6 +108,20 @@ void menu_bound(struct menu *menu) {
     }
 }
 
+void menu_render(struct menu *menu) {
+    for (int i = 0; i < menu->view_len; i++) {
+        menu_clean(menu, i + 1);
+
+        if (menu->view_start + i == menu->view_i) {
+            wattron(menu->win, A_REVERSE);
+        }
+        mvwprintw(menu->win, 1 + i, 1, "%.*s", menu->width - 2,
+                  menu->items[i + menu->view_start].name);
+        wattroff(menu->win, A_REVERSE);
+    }
+    wrefresh(menu->win);
+}
+
 void menu_resize(struct menu *menu, struct main_win *main_win) {
     wclear(menu->win);
     wresize(menu->win, main_win->height - 3, main_win->width);
@@ -113,13 +131,12 @@ void menu_resize(struct menu *menu, struct main_win *main_win) {
     menu->height = main_win->height - 3;
     menu->width = main_win->width;
 
-    int max =
-        menu->items_len > menu->height - 2 ? menu->height - 2 : menu->items_len;
-    menu->view_len = max;
-    menu->view_start = menu->view_i - max / 2;
+    int view_len = menu_get_view_len(menu);
+    menu->view_len = view_len;
+    menu->view_start = menu->view_i - view_len / 2;
 
     menu_bound(menu);
-    menu_update(menu, -1);
+    menu_render(menu);
 }
 
 void menu_scroll(struct menu *menu, enum direction direction) {
@@ -161,17 +178,7 @@ struct menu_item *menu_update(struct menu *menu, int key) {
         break;
     }
 
-    for (int i = 0; i < menu->view_len; i++) {
-        menu_clean(menu, i + 1);
-
-        if (menu->view_start + i == menu->view_i) {
-            wattron(menu->win, A_REVERSE);
-        }
-        mvwprintw(menu->win, 1 + i, 1, "%.*s", menu->width - 2,
-                  menu->items[i + menu->view_start].name);
-        wattroff(menu->win, A_REVERSE);
-    }
-    wrefresh(menu->win);
+    menu_render(menu);
 
     return NULL;
 }

@@ -84,6 +84,20 @@ void player_play(struct player *player, struct menu_item *item) {
     mpv_command(player->mpv, args);
 }
 
+void player_render(struct player *player) {
+    player_clean(player);
+    mvwprintw(player->win, 1, 1, "%.*s", player->width - 2 - 4, player->name);
+
+    if (strcmp(player->name, "") != 0) {
+        wprintw(player->win, " ");
+    }
+
+    double volume;
+    mpv_get_property(player->mpv, "volume", MPV_FORMAT_DOUBLE, &volume);
+    wprintw(player->win, "%.f", volume);
+    wrefresh(player->win);
+}
+
 void player_update(struct player *player, int key) {
     switch (key) {
     case KEY_ESCAPE:
@@ -106,17 +120,7 @@ void player_update(struct player *player, int key) {
         break;
     }
 
-    player_clean(player);
-    mvwprintw(player->win, 1, 1, "%.*s", player->width - 2 - 4, player->name);
-
-    if (strcmp(player->name, "") != 0) {
-        wprintw(player->win, " ");
-    }
-
-    double volume;
-    mpv_get_property(player->mpv, "volume", MPV_FORMAT_DOUBLE, &volume);
-    wprintw(player->win, "%.f", volume);
-    wrefresh(player->win);
+    player_render(player);
 }
 
 void player_resize(struct player *player, struct main_win *main_win) {
@@ -128,7 +132,7 @@ void player_resize(struct player *player, struct main_win *main_win) {
 
     player->width = main_win->width;
     player->y = main_win->height - 3;
-    player_update(player, -1);
+    player_render(player);
 }
 
 void player_destroy(struct player *player) {
