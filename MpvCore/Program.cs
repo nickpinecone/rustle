@@ -7,5 +7,6 @@ public static class Program
         var player = new Player();
 
         await player.Play("~/Downloads/sample-15s.wav");
+        await player.Wait();
     }
 }
