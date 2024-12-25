@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 public class Command
 {
@@ -7,8 +8,6 @@ public class Command
 
     private const string PauseCommand = "kill -TSTP {0}";
     private const string ResumeCommand = "kill -CONT {0}";
-
-    public string BashPath { get; set; } = "/bin/bash";
 
     public string Name { get; private set; }
     public bool Paused { get; private set; }
@@ -22,18 +21,7 @@ public class Command
     {
         if (_process == null)
         {
-            _process = new Process()
-            {
-                StartInfo = new ProcessStartInfo()
-                {
-                    FileName = BashPath,
-                    Arguments = $"-c \"{Name}\"",
-                    RedirectStandardInput = true,
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                }
-            };
+            _process = Shell.StartProcess(Name);
 
             _process.Exited += HandleFinished;
             _process.Disposed += HandleFinished;
@@ -58,22 +46,11 @@ public class Command
         }
     }
 
-    public async void Pause()
+    public async Task Pause()
     {
         if (!Paused && _process != null)
         {
-            var pause = new Process()
-            {
-                StartInfo = new ProcessStartInfo()
-                {
-                    FileName = BashPath,
-                    Arguments = $"-c \"{string.Format(PauseCommand, _process.Id)}\"",
-                    RedirectStandardInput = true,
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                }
-            };
+            var pause = Shell.StartProcess(string.Format(PauseCommand, _process.Id));
 
             pause.Start();
             await pause.WaitForExitAsync();
@@ -82,22 +59,11 @@ public class Command
         }
     }
 
-    public async void Resume()
+    public async Task Resume()
     {
         if (Paused && _process != null)
         {
-            var resume = new Process()
-            {
-                StartInfo = new ProcessStartInfo()
-                {
-                    FileName = BashPath,
-                    Arguments = $"-c \"{string.Format(ResumeCommand, _process.Id)}\"",
-                    RedirectStandardInput = true,
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                }
-            };
+            var resume = Shell.StartProcess(string.Format(ResumeCommand, _process.Id));
 
             resume.Start();
             await resume.WaitForExitAsync();
