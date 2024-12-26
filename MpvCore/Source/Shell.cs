@@ -6,23 +6,16 @@ namespace FFAudio;
 
 internal static class Shell
 {
-    private const string PauseArgs = "-TSTP {0}";
-    private const string ResumeArgs = "-CONT {0}";
-
     public static Process Create(string program, string args = "")
     {
-        return new Process()
-        {
-            StartInfo = new ProcessStartInfo()
-            {
-                FileName = program,
-                Arguments = args,
-                RedirectStandardInput = true,
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            }
-        };
+        return new Process() { StartInfo = new ProcessStartInfo() {
+            FileName = program,
+            Arguments = args,
+            RedirectStandardInput = true,
+            RedirectStandardOutput = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        } };
     }
 
     public static void Start(Process process)
@@ -40,7 +33,7 @@ internal static class Shell
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            var pause = Shell.Create("kill", string.Format(PauseArgs, process.Id));
+            var pause = Shell.Create("kill", $"-TSTP {process.Id}");
             pause.Start();
             await pause.WaitForExitAsync();
         }
@@ -50,7 +43,7 @@ internal static class Shell
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            var resume = Shell.Create("kill", string.Format(ResumeArgs, process.Id));
+            var resume = Shell.Create("kill", $"-CONT {process.Id}");
             resume.Start();
             await resume.WaitForExitAsync();
         }

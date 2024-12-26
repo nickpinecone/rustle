@@ -8,7 +8,7 @@ public class FFPlayer
 {
     private Process? _process = null;
 
-    public string ProgramPath { get; set; } = "";
+    public string ProgramPath { get; set; }
     public bool Playing { get; private set; }
     public bool Paused { get; private set; }
 
