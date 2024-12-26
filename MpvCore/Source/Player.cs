@@ -2,12 +2,20 @@ using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-public class Player
+namespace FFAudio;
+
+public class FFPlayer
 {
     private Process? _process = null;
 
+    public string ProgramPath { get; set; } = "";
     public bool Playing { get; private set; }
     public bool Paused { get; private set; }
+
+    public FFPlayer(string programPath)
+    {
+        ProgramPath = programPath;
+    }
 
     private void HandleFinished(object? sender, EventArgs e)
     {
@@ -28,7 +36,7 @@ public class Player
 
         if (!Playing && _process == null)
         {
-            _process = Shell.Create($"ffplay -nodisp -loglevel error -autoexit {path}");
+            _process = Shell.Create(ProgramPath, $"-nodisp -loglevel error -autoexit {path}");
 
             _process.Exited += HandleFinished;
             _process.Disposed += HandleFinished;
