@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace FFAudio;
@@ -32,6 +33,8 @@ public class FFRecorder
 
     public async Task Record(string path)
     {
+        Stop();
+
         if (Paused && _process != null)
         {
             await Shell.Resume(_process);
@@ -66,16 +69,33 @@ public class FFRecorder
         if (Recording && _process != null)
         {
             Shell.Stop(_process);
+
+            _process = null;
+            Recording = false;
+            Paused = false;
         }
     }
 
+    /// <summary>
+    /// Uses <c>kill</c> to pause the recorder
+    /// </summary>
+    /// <exception cref="NotImplementedException">
+    /// Thrown when used on Windows
+    /// </exception>
     public async Task Pause()
     {
-        if (!Paused && Recording && _process != null)
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            await Shell.Pause(_process);
+            if (!Paused && Recording && _process != null)
+            {
+                await Shell.Pause(_process);
 
-            Paused = true;
+                Paused = true;
+            }
+        }
+        else
+        {
+            throw new NotImplementedException("Pause not implemented on Windows");
         }
     }
 }

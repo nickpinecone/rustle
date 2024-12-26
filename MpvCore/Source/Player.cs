@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace FFAudio;
@@ -27,6 +28,8 @@ public class FFPlayer
 
     public async Task Play(string path)
     {
+        Stop();
+
         if (Paused && _process != null)
         {
             await Shell.Resume(_process);
@@ -34,7 +37,7 @@ public class FFPlayer
             Paused = false;
         }
 
-        if (!Playing && _process == null)
+        else if (!Playing && _process == null)
         {
             _process = Shell.Create(ProgramPath, $"-nodisp -loglevel error -autoexit {path}");
 
@@ -61,16 +64,33 @@ public class FFPlayer
         if (Playing && _process != null)
         {
             Shell.Stop(_process);
+
+            _process = null;
+            Playing = false;
+            Paused = false;
         }
     }
 
+    /// <summary>
+    /// Uses <c>kill</c> to pause the player
+    /// </summary>
+    /// <exception cref="NotImplementedException">
+    /// Thrown when used on Windows
+    /// </exception>
     public async Task Pause()
     {
-        if (!Paused && Playing && _process != null)
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {
-            await Shell.Pause(_process);
+            if (!Paused && Playing && _process != null)
+            {
+                await Shell.Pause(_process);
 
-            Paused = true;
+                Paused = true;
+            }
+        }
+        else
+        {
+            throw new NotImplementedException("Pause not implemented on Windows");
         }
     }
 }

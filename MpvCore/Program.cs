@@ -10,12 +10,7 @@ public static class Program
         var player = new FFPlayer("/usr/bin/ffplay");
         var recorder = new FFRecorder("/usr/bin/ffmpeg", "pulse");
 
-        await recorder.Record("output.wav");
-
-        Console.ReadKey();
-        recorder.Stop();
-
-        await player.Play("output.wav");
+        await player.Play("sample-15s.wav");
         await player.Wait();
     }
 }
