@@ -7,6 +7,8 @@ namespace FFAudio;
 
 public class FFRecorder
 {
+    public event EventHandler? RecordFinished = null;
+
     private Process? _process = null;
 
     public string ProgramPath { get; set; }
@@ -29,18 +31,13 @@ public class FFRecorder
 
         Recording = false;
         Paused = false;
+
+        RecordFinished?.Invoke(this, e);
     }
 
-    public async Task Record(string path)
+    public void Record(string path)
     {
         Stop();
-
-        if (Paused && _process != null)
-        {
-            await Shell.Resume(_process);
-
-            Paused = false;
-        }
 
         if (!Recording && _process == null)
         {
@@ -53,6 +50,16 @@ public class FFRecorder
             Shell.Start(_process);
 
             Recording = true;
+        }
+    }
+
+    public async Task Resume()
+    {
+        if (Paused && _process != null)
+        {
+            await Shell.Resume(_process);
+
+            Paused = false;
         }
     }
 

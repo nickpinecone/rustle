@@ -7,6 +7,8 @@ namespace FFAudio;
 
 public class FFPlayer
 {
+    public event EventHandler? PlaybackFinished = null;
+
     private Process? _process = null;
 
     public string ProgramPath { get; set; }
@@ -24,23 +26,19 @@ public class FFPlayer
 
         Playing = false;
         Paused = false;
+
+        PlaybackFinished?.Invoke(this, e);
     }
 
-    public async Task Play(string path)
+    public void Play(string path)
     {
         Stop();
 
-        if (Paused && _process != null)
-        {
-            await Shell.Resume(_process);
-
-            Paused = false;
-        }
-
-        else if (!Playing && _process == null)
+        if (!Playing && _process == null)
         {
             _process = Shell.Create(ProgramPath, $"-nodisp -loglevel error -autoexit {path}");
 
+            _process.EnableRaisingEvents = true;
             _process.Exited += HandleFinished;
             _process.Disposed += HandleFinished;
             _process.ErrorDataReceived += HandleFinished;
@@ -67,6 +65,16 @@ public class FFPlayer
 
             _process = null;
             Playing = false;
+            Paused = false;
+        }
+    }
+
+    public async Task Resume()
+    {
+        if (Paused && _process != null)
+        {
+            await Shell.Resume(_process);
+
             Paused = false;
         }
     }
