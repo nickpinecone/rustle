@@ -5,11 +5,14 @@
     <Nullable>enable</Nullable>
 
     <PackageId>NickPinecone.FFAudio</PackageId>
-    <Version>0.1.0.1</Version>
+    <Version>0.1.0.2</Version>
     <Authors>Nick Pinecone</Authors>
 
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+
+    <RepositoryUrl>https://github.com/nickpinecone/ffaudio.git</RepositoryUrl> 
+    <RepositoryType>git</RepositoryType> 
   </PropertyGroup>
 
   <ItemGroup>
