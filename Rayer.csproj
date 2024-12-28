@@ -3,11 +3,11 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>disable</ImplicitUsings>
-    <Nullable>disable</Nullable>
+    <Nullable>Enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="NickPinecone.FFAudio" Version="0.1.1.1" />
     <PackageReference Include="Terminal.Gui" Version="1.*" />
   </ItemGroup>
 

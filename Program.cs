@@ -1,6 +1,6 @@
 ﻿using Terminal.Gui;
 
-namespace Riff;
+namespace Rayer;
 
 public static class Program
 {
