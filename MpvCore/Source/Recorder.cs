@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace FFAudio;
 
-public class FFRecorder
+public class FFRecorder : IDisposable
 {
     public event EventHandler? RecordFinished = null;
 
@@ -104,5 +104,10 @@ public class FFRecorder
         {
             throw new NotImplementedException("Pause not implemented on Windows");
         }
+    }
+
+    public void Dispose()
+    {
+        Stop();
     }
 }

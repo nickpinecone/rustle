@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace FFAudio;
 
-public class FFPlayer
+public class FFPlayer : IDisposable
 {
     public event EventHandler? PlaybackFinished = null;
 
@@ -100,5 +100,10 @@ public class FFPlayer
         {
             throw new NotImplementedException("Pause not implemented on Windows");
         }
+    }
+
+    public void Dispose()
+    {
+        Stop();
     }
 }
