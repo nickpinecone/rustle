@@ -1,1 +1,1 @@
-﻿// Empty
+﻿Console.WriteLine("Hello, World!");
