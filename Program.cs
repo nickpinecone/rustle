@@ -1,1 +1,8 @@
-﻿Console.WriteLine("Hello, World!");
+﻿namespace Rayer;
+
+public static class Program
+{
+    public static void Main()
+    {
+    }
+}
