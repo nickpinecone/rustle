@@ -1,4 +1,6 @@
 using System;
+using System.Diagnostics;
+using System.IO;
 using System.IO.Pipes;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
@@ -42,7 +44,7 @@ public record PauseResponse()
 
 public class UnixSocket : IIpcSocket
 {
-    private readonly string _name = $"/tmp/mpv-socket";
+    private readonly string _name = $"/tmp/mpvsocket.sock";
     private Socket? _socket;
     
     public string GetName()
@@ -52,8 +54,12 @@ public class UnixSocket : IIpcSocket
 
     public async Task ConnectAsync()
     {
-        _socket = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.IP);
+        _socket = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.IP)
+        {
+            Blocking = false,
+        };
         await _socket.ConnectAsync(new UnixDomainSocketEndPoint(_name));
+        _socket.SendBufferSize = 0;
     }
 
     public async Task SendCommandAsync<TCommand>(TCommand command)
@@ -61,24 +67,26 @@ public class UnixSocket : IIpcSocket
         ArgumentNullException.ThrowIfNull(_socket);
 
         var json = JsonSerializer.Serialize(command);
-        var stdErrBuffer = new StringBuilder();
-
-        try
-        {
-            await Cli.Wrap("echo")
-                .WithArguments([json, "|", "socat", "-", _name])
-                .WithStandardErrorPipe(PipeTarget.ToStringBuilder(stdErrBuffer))
-                .ExecuteAsync();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-        }
-
-        var response = stdErrBuffer.ToString();
-        // var bytes = Encoding.UTF8.GetBytes(json);
+        var bytes = Encoding.UTF8.GetBytes(json + "\n");
+        
+        // var cmd = "{\"command\": [\"set_property\", \"pause\", false]}";
+        // using var ms = new MemoryStream(Encoding.UTF8.GetBytes(cmd));
+        // await ms.CopyToAsync(new NetworkStream(_socket));
+        
+        // var process = new Process()
+        // {
+        //     StartInfo = new ProcessStartInfo
+        //     {
+        //         FileName = "socat",
+        //         Arguments = "- UNIX-CONNECT:/tmp/mpvsocket.sock",
+        //         RedirectStandardInput = true,
+        //         UseShellExecute = false
+        //     }
+        // };
+        // process.Start();
         //
-        // await _socket.SendAsync(new ArraySegment<byte>(bytes), SocketFlags.None);
+        // await process.StandardInput.WriteLineAsync("{\"command\":[\"set_property\", \"pause\", true]}");
+        await _socket.SendAsync(new ArraySegment<byte>(bytes), SocketFlags.None);
     }
 
     public async Task<TResponse> SendCommandAsync<TCommand, TResponse>(TCommand command)
