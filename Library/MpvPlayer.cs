@@ -28,7 +28,7 @@ public class MpvPlayer
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             _mpvPath = mpvPath ?? "mpv.exe";
-            // _socket = new WindowsSocket();
+            _socket = new WindowsSocket();
         }
         else
         {

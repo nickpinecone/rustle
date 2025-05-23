@@ -5,6 +5,8 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Polly;
+using Polly.Retry;
 using Rayer.Library.Commands;
 
 namespace Rayer.Library.Socket;
@@ -13,6 +15,12 @@ internal class UnixSocket : IMpvSocket
 {
     private readonly string _name = $"/tmp/mpv-socket-{Guid.NewGuid()}";
     private System.Net.Sockets.Socket? _socket;
+
+    private static ResiliencePipeline DefaultRetry =>
+        new ResiliencePipelineBuilder()
+            .AddRetry(new RetryStrategyOptions())
+            .AddTimeout(TimeSpan.FromSeconds(5))
+            .Build();
 
     public string GetName()
     {
@@ -27,27 +35,10 @@ internal class UnixSocket : IMpvSocket
             Blocking = false,
         };
 
-        var retries = 0;
-        while (!_socket.Connected && retries < 5)
+        await DefaultRetry.ExecuteAsync(async token =>
         {
-            retries += 1;
-
-            await Task.Delay(100 * retries);
-
-            try
-            {
-                await _socket.ConnectAsync(new UnixDomainSocketEndPoint(_name));
-            }
-            catch
-            {
-                // ignored
-            }
-        }
-
-        if (!_socket.Connected)
-        {
-            throw new Exception("Could not establish connection to the socket");
-        }
+            await _socket.ConnectAsync(new UnixDomainSocketEndPoint(_name), token);
+        });
     }
 
     [MemberNotNull(nameof(_socket))]
@@ -59,7 +50,10 @@ internal class UnixSocket : IMpvSocket
         var json = JsonSerializer.Serialize(command);
         var bytes = Encoding.UTF8.GetBytes(json + "\n");
 
-        await _socket.SendAsync(new ArraySegment<byte>(bytes), SocketFlags.None);
+        await DefaultRetry.ExecuteAsync(async token =>
+        {
+            await _socket.SendAsync(new ArraySegment<byte>(bytes), SocketFlags.None, token);
+        });
     }
 
     [MemberNotNull(nameof(_socket))]
@@ -74,8 +68,11 @@ internal class UnixSocket : IMpvSocket
 
         while (_socket.Available > 0)
         {
-            var received = await _socket.ReceiveAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
-            responseBuffer.Append(Encoding.UTF8.GetString(buffer, 0, received));
+            await DefaultRetry.ExecuteAsync(async token =>
+            {
+                var received = await _socket.ReceiveAsync(new ArraySegment<byte>(buffer), SocketFlags.None, token);
+                responseBuffer.Append(Encoding.UTF8.GetString(buffer, 0, received));
+            });
         }
 
         var response = responseBuffer
