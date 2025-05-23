@@ -30,10 +30,7 @@ internal class UnixSocket : IMpvSocket
     [MemberNotNull(nameof(_socket))]
     public async Task ConnectAsync()
     {
-        _socket = new System.Net.Sockets.Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.IP)
-        {
-            Blocking = false,
-        };
+        _socket = new System.Net.Sockets.Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.IP);
 
         await DefaultRetry.ExecuteAsync(async token =>
         {
@@ -56,12 +53,10 @@ internal class UnixSocket : IMpvSocket
         });
     }
 
-    [MemberNotNull(nameof(_socket))]
-    public async Task<TResponse> SendCommandAsync<TCommand, TResponse>(TCommand command)
-        where TCommand : MpvCommand
+    private async Task<TResponse> GetResponseAsync<TResponse>(int requestId)
         where TResponse : MpvResponse
     {
-        await SendCommandAsync(command);
+        ArgumentNullException.ThrowIfNull(_socket);
 
         var responseBuffer = new StringBuilder();
         var buffer = new byte[4096];
@@ -79,8 +74,18 @@ internal class UnixSocket : IMpvSocket
             .ToString()
             .Split("\n")
             .Where(res => !res.Contains("event"))
-            .Select(res => JsonSerializer.Deserialize<TResponse>(res))
-            .FirstOrDefault(res => res?.RequestId == command.RequestId);
+            .Select(res =>
+            {
+                try
+                {
+                    return JsonSerializer.Deserialize<TResponse>(res);
+                }
+                catch
+                {
+                    return null;
+                }
+            })
+            .FirstOrDefault(res => res?.RequestId == requestId);
 
         if (response is null)
         {
@@ -88,5 +93,15 @@ internal class UnixSocket : IMpvSocket
         }
 
         return response;
+    }
+
+    [MemberNotNull(nameof(_socket))]
+    public async Task<TResponse> SendCommandAsync<TCommand, TResponse>(TCommand command)
+        where TCommand : MpvCommand
+        where TResponse : MpvResponse
+    {
+        await SendCommandAsync(command);
+
+        return await DefaultRetry.ExecuteAsync(async _ => await GetResponseAsync<TResponse>(command.RequestId));
     }
 }

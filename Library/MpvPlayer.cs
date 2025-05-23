@@ -47,18 +47,6 @@ public class MpvPlayer
         await _socket.ConnectAsync();
     }
 
-    public async Task PauseAsync()
-    {
-        Interlocked.Increment(ref _uniqueId);
-        await _socket.SendCommandAsync(new PauseCommand(_uniqueId));
-    }
-
-    public async Task ResumeAsync()
-    {
-        Interlocked.Increment(ref _uniqueId);
-        await _socket.SendCommandAsync(new ResumeCommand(_uniqueId));
-    }
-
     public async Task WaitAsync()
     {
         if (_playTask is not null)
@@ -72,9 +60,44 @@ public class MpvPlayer
         if (_tokenSource is not null)
         {
             await _tokenSource.CancelAsync();
-            
+
             _playTask = null;
             _tokenSource = null;
         }
+    }
+
+    public async Task PauseAsync()
+    {
+        Interlocked.Increment(ref _uniqueId);
+        await _socket.SendCommandAsync(new PauseCommand(_uniqueId));
+    }
+
+    public async Task ResumeAsync()
+    {
+        Interlocked.Increment(ref _uniqueId);
+        await _socket.SendCommandAsync(new ResumeCommand(_uniqueId));
+    }
+    
+    public async Task<bool> GetPausedAsync()
+    {
+        Interlocked.Increment(ref _uniqueId);
+        var response =
+            await _socket.SendCommandAsync<GetPauseCommand, GetPauseResponse>(new GetPauseCommand(_uniqueId));
+        return response.IsPaused;
+    }
+
+    public async Task SetVolumeAsync(int volume)
+    {
+        Interlocked.Increment(ref _uniqueId);
+        volume = int.Clamp(volume, 0, 100);
+        await _socket.SendCommandAsync(new SetVolumeCommand(_uniqueId, volume));
+    }
+
+    public async Task<int> GetVolumeAsync()
+    {
+        Interlocked.Increment(ref _uniqueId);
+        var response =
+            await _socket.SendCommandAsync<GetVolumeCommand, GetVolumeResponse>(new GetVolumeCommand(_uniqueId));
+        return (int)response.Volume;
     }
 }

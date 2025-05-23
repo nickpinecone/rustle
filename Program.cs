@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Rayer.Library;
 
 namespace Rayer;
@@ -11,18 +12,26 @@ public static class Program
 
         await player.PlayAsync("http://rdstream-0625.dez.ovh:8000/radio.mp3");
         
-        await Task.Delay(5000);
-        
-        await player.PauseAsync();
-        
-        await Task.Delay(5000);
-        
-        await player.ResumeAsync();
-        
-        await Task.Delay(5000);
+        await player.SetVolumeAsync(50);
 
-        await player.WaitAsync();
+        var volume = await player.GetVolumeAsync();
+        Console.WriteLine(volume);
         
-        await player.StopAsync();
+        var isPaused = await player.GetPausedAsync();
+        Console.WriteLine(isPaused);
+
+        // await Task.Delay(5000);
+        //
+        // await player.PauseAsync();
+        //
+        // await Task.Delay(5000);
+        //
+        // await player.ResumeAsync();
+        //
+        // await Task.Delay(5000);
+        //
+        // await player.WaitAsync();
+        //
+        // await player.StopAsync();
     }
 }
