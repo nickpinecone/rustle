@@ -3,14 +3,20 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using CliWrap;
+using Rayer.Library.Commands;
+using Rayer.Library.Socket;
 
 namespace Rayer.Library;
 
 public class MpvPlayer
 {
-    private readonly IIpcSocket _socket;
+    private readonly IMpvSocket _socket;
     private readonly string _mpvPath;
+
+    private CommandTask<CommandResult>? _playTask;
     private CancellationTokenSource? _tokenSource;
+
+    private static int _uniqueId = 0;
 
     public MpvPlayer(string? mpvPath = null)
     {
@@ -22,7 +28,7 @@ public class MpvPlayer
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             _mpvPath = mpvPath ?? "mpv.exe";
-            _socket = new WindowsSocket();
+            // _socket = new WindowsSocket();
         }
         else
         {
@@ -33,23 +39,32 @@ public class MpvPlayer
     public async Task PlayAsync(string url)
     {
         _tokenSource = new CancellationTokenSource();
-        
-        _ = Cli.Wrap(_mpvPath)
+
+        _playTask = Cli.Wrap(_mpvPath)
             .WithArguments(["--no-video", "--idle", $"--input-ipc-server={_socket.GetName()}", url])
             .ExecuteAsync(_tokenSource.Token);
 
-        await Task.Delay(1000);
         await _socket.ConnectAsync();
     }
 
     public async Task PauseAsync()
     {
-         await _socket.SendCommandAsync<PauseCommand>(new PauseCommand());
+        Interlocked.Increment(ref _uniqueId);
+        await _socket.SendCommandAsync(new PauseCommand(_uniqueId));
     }
-    
+
     public async Task ResumeAsync()
     {
-        await _socket.SendCommandAsync(new ResumeCommand());
+        Interlocked.Increment(ref _uniqueId);
+        await _socket.SendCommandAsync(new ResumeCommand(_uniqueId));
+    }
+
+    public async Task WaitAsync()
+    {
+        if (_playTask is not null)
+        {
+            await _playTask;
+        }
     }
 
     public async Task StopAsync()
@@ -57,6 +72,8 @@ public class MpvPlayer
         if (_tokenSource is not null)
         {
             await _tokenSource.CancelAsync();
+            
+            _playTask = null;
             _tokenSource = null;
         }
     }
