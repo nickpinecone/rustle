@@ -7,9 +7,9 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Polly;
 using Polly.Retry;
-using Rayer.Library.Commands;
+using Rustle.Library.Commands;
 
-namespace Rayer.Library.Socket;
+namespace Rustle.Library.Socket;
 
 internal class UnixSocket : IMpvSocket
 {

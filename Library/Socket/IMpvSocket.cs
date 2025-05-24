@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
-using Rayer.Library.Commands;
+using Rustle.Library.Commands;
 
-namespace Rayer.Library.Socket;
+namespace Rustle.Library.Socket;
 
 internal interface IMpvSocket
 {

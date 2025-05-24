@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Rayer.Library.Commands;
+namespace Rustle.Library.Commands;
 
 internal abstract record MpvResponse
 {

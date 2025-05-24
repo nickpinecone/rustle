@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Rayer.Library;
+using Rustle.Library;
 
-namespace Rayer;
+namespace Rustle;
 
 public static class Program
 {

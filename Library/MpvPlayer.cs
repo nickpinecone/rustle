@@ -3,10 +3,10 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using CliWrap;
-using Rayer.Library.Commands;
-using Rayer.Library.Socket;
+using Rustle.Library.Commands;
+using Rustle.Library.Socket;
 
-namespace Rayer.Library;
+namespace Rustle.Library;
 
 public class MpvPlayer
 {
