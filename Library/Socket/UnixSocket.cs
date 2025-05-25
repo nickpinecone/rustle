@@ -27,14 +27,30 @@ internal class UnixSocket : IMpvSocket
         return _name;
     }
 
+    public Task CloseAsync()
+    {
+        if (_socket is not null)
+        {
+            _socket.Close();
+            _socket = null;
+        }
+
+        return Task.CompletedTask;
+    }
+
     [MemberNotNull(nameof(_socket))]
     public async Task ConnectAsync()
     {
+        await CloseAsync();
+        
         _socket = new System.Net.Sockets.Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.IP);
 
         await DefaultRetry.ExecuteAsync(async token =>
         {
-            await _socket.ConnectAsync(new UnixDomainSocketEndPoint(_name), token);
+            if (!_socket.Connected)
+            {
+                await _socket.ConnectAsync(new UnixDomainSocketEndPoint(_name), token);
+            }
         });
     }
 
@@ -106,7 +122,7 @@ internal class UnixSocket : IMpvSocket
 
         return await DefaultRetry.ExecuteAsync(async _ => await ReceiveAsync<TResponse>(command.RequestId));
     }
-    
+
     public async Task SendCommandAsync<TCommand>(TCommand command)
         where TCommand : MpvCommand
     {

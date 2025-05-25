@@ -15,6 +15,11 @@ internal class WindowsSocket : IMpvSocket
         return _name;
     }
 
+    public Task CloseAsync()
+    {
+        throw new NotImplementedException();
+    }
+
     public Task ConnectAsync()
     {
         throw new NotImplementedException();

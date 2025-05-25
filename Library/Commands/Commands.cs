@@ -41,3 +41,14 @@ internal record GetVolumeResponse : MpvResponse
     [JsonPropertyName("data")]
     public required float Volume { get; set; }
 }
+
+internal record GetMediaTitleCommand(int RequestId) : MpvCommand(RequestId)
+{
+    public override object[] Command { get; set; } = ["get_property", "media-title"];
+}
+
+internal record GetMediaTitleResponse : MpvResponse
+{
+    [JsonPropertyName("data")]
+    public required string MediaTitle { get; set; }
+}

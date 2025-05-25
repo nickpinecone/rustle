@@ -7,6 +7,7 @@ internal interface IMpvSocket
 {
     public string GetName();
 
+    public Task CloseAsync();
     public Task ConnectAsync();
 
     public Task SendCommandAsync<TCommand>(TCommand command)

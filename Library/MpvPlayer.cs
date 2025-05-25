@@ -41,7 +41,7 @@ public class MpvPlayer
     public async Task PlayAsync(string url)
     {
         await StopAsync();
-        
+
         _tokenSource = new CancellationTokenSource();
 
         _playTask = Cli.Wrap(_mpvPath)
@@ -57,7 +57,14 @@ public class MpvPlayer
     {
         if (_playTask is not null)
         {
-            await _playTask;
+            try
+            {
+                await _playTask;
+            }
+            catch
+            {
+                // ignored
+            }
         }
     }
 
@@ -66,11 +73,13 @@ public class MpvPlayer
         if (_tokenSource is not null)
         {
             await _tokenSource.CancelAsync();
+            await WaitAsync();
+            await _socket.CloseAsync();
 
             _playTask = null;
             _tokenSource = null;
         }
-        
+
         Playing = false;
     }
 
@@ -85,7 +94,7 @@ public class MpvPlayer
         Interlocked.Increment(ref _uniqueId);
         await _socket.SendCommandAsync(new ResumeCommand(_uniqueId));
     }
-    
+
     public async Task<bool> GetPausedAsync()
     {
         Interlocked.Increment(ref _uniqueId);
@@ -107,5 +116,15 @@ public class MpvPlayer
         var response =
             await _socket.SendCommandAsync<GetVolumeCommand, GetVolumeResponse>(new GetVolumeCommand(_uniqueId));
         return (int)response.Volume;
+    }
+
+    public async Task<string> GetMediaTitleAsync()
+    {
+        Interlocked.Increment(ref _uniqueId);
+        var response =
+            await _socket.SendCommandAsync<GetMediaTitleCommand, GetMediaTitleResponse>(
+                new GetMediaTitleCommand(_uniqueId)
+            );
+        return response.MediaTitle;
     }
 }

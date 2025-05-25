@@ -19,19 +19,23 @@ public static class Program
         
         var isPaused = await player.GetPausedAsync();
         Console.WriteLine(isPaused);
+        
+        var title = await player.GetMediaTitleAsync();
+        Console.WriteLine(title);
+        
+        await player.PlayAsync("http://rdstream-0625.dez.ovh:8000/radio.mp3");
+        
+        await player.SetVolumeAsync(50);
 
-        // await Task.Delay(5000);
-        //
-        // await player.PauseAsync();
-        //
-        // await Task.Delay(5000);
-        //
-        // await player.ResumeAsync();
-        //
-        // await Task.Delay(5000);
-        //
-        // await player.WaitAsync();
-        //
-        // await player.StopAsync();
+        volume = await player.GetVolumeAsync();
+        Console.WriteLine(volume);
+        
+        isPaused = await player.GetPausedAsync();
+        Console.WriteLine(isPaused);
+        
+        title = await player.GetMediaTitleAsync();
+        Console.WriteLine(title);
+
+        await player.WaitAsync();
     }
 }
