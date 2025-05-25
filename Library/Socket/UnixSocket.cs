@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
@@ -38,11 +37,8 @@ internal class UnixSocket : IMpvSocket
         return Task.CompletedTask;
     }
 
-    [MemberNotNull(nameof(_socket))]
     public async Task ConnectAsync()
     {
-        await CloseAsync();
-        
         _socket = new System.Net.Sockets.Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.IP);
 
         await DefaultRetry.ExecuteAsync(async token =>
@@ -54,7 +50,6 @@ internal class UnixSocket : IMpvSocket
         });
     }
 
-    [MemberNotNull(nameof(_socket))]
     private async Task SendAsync<TCommand>(TCommand command)
         where TCommand : MpvCommand
     {
@@ -69,7 +64,6 @@ internal class UnixSocket : IMpvSocket
         });
     }
 
-    [MemberNotNull(nameof(_socket))]
     private async Task<TResponse> ReceiveAsync<TResponse>(int requestId)
         where TResponse : MpvResponse
     {
@@ -86,7 +80,7 @@ internal class UnixSocket : IMpvSocket
                 responseBuffer.Append(Encoding.UTF8.GetString(buffer, 0, received));
             });
         }
-        
+
         Console.WriteLine(responseBuffer.ToString());
 
         var response = responseBuffer

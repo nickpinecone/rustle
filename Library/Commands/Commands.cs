@@ -2,6 +2,19 @@ using System.Text.Json.Serialization;
 
 namespace Rustle.Library.Commands;
 
+internal record LoadfileCommand(
+    int RequestId,
+    [property: JsonIgnore] string Url
+) : MpvCommand(RequestId)
+{
+    public override object[] Command { get; set; } = ["loadfile", Url];
+}
+
+internal record StopCommand(int RequestId) : MpvCommand(RequestId)
+{
+    public override object[] Command { get; set; } = ["stop"];
+}
+
 internal record PauseCommand(int RequestId) : MpvCommand(RequestId)
 {
     public override object[] Command { get; set; } = ["set_property", "pause", true];

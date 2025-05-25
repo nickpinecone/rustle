@@ -9,6 +9,7 @@ public static class Program
     public static async Task Main()
     {
         var player = new MpvPlayer();
+        await player.Initialize();
 
         await player.PlayAsync("http://rdstream-0625.dez.ovh:8000/radio.mp3");
         
@@ -36,6 +37,6 @@ public static class Program
         title = await player.GetMediaTitleAsync();
         Console.WriteLine(title);
 
-        await player.WaitAsync();
+        Console.Read();
     }
 }

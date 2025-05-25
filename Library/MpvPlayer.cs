@@ -8,14 +8,12 @@ using Rustle.Library.Socket;
 
 namespace Rustle.Library;
 
-public class MpvPlayer
+public class MpvPlayer : IAsyncDisposable
 {
+    private readonly CancellationTokenSource _tokenSource;
     private readonly IMpvSocket _socket;
+    
     private readonly string _mpvPath;
-
-    private CommandTask<CommandResult>? _playTask;
-    private CancellationTokenSource? _tokenSource;
-
     private static int _uniqueId = 0;
 
     public bool Playing { get; private set; } = false;
@@ -36,50 +34,38 @@ public class MpvPlayer
         {
             throw new Exception("Unsupported operating system");
         }
+
+        _tokenSource = new CancellationTokenSource();
+    }
+
+    public async Task Initialize()
+    {
+        _ = Cli.Wrap(_mpvPath)
+            .WithArguments(["--no-video", "--idle", $"--input-ipc-server={_socket.GetName()}"])
+            .ExecuteAsync(_tokenSource.Token);
+
+        await _socket.ConnectAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await _tokenSource.CancelAsync();
+        await _socket.CloseAsync();
+        
+        GC.SuppressFinalize(this);
     }
 
     public async Task PlayAsync(string url)
     {
-        await StopAsync();
-
-        _tokenSource = new CancellationTokenSource();
-
-        _playTask = Cli.Wrap(_mpvPath)
-            .WithArguments(["--no-video", "--idle", $"--input-ipc-server={_socket.GetName()}", url])
-            .ExecuteAsync(_tokenSource.Token);
-
-        await _socket.ConnectAsync();
-
+        Interlocked.Increment(ref _uniqueId);
+        await _socket.SendCommandAsync(new LoadfileCommand(_uniqueId, url));
         Playing = true;
-    }
-
-    public async Task WaitAsync()
-    {
-        if (_playTask is not null)
-        {
-            try
-            {
-                await _playTask;
-            }
-            catch
-            {
-                // ignored
-            }
-        }
     }
 
     public async Task StopAsync()
     {
-        if (_tokenSource is not null)
-        {
-            await _tokenSource.CancelAsync();
-            await WaitAsync();
-            await _socket.CloseAsync();
-
-            _playTask = null;
-            _tokenSource = null;
-        }
-
+        Interlocked.Increment(ref _uniqueId);
+        await _socket.SendCommandAsync(new StopCommand(_uniqueId));
         Playing = false;
     }
 
