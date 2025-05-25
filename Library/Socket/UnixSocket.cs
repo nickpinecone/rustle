@@ -39,7 +39,7 @@ internal class UnixSocket : IMpvSocket
     }
 
     [MemberNotNull(nameof(_socket))]
-    public async Task SendCommandAsync<TCommand>(TCommand command)
+    private async Task SendAsync<TCommand>(TCommand command)
         where TCommand : MpvCommand
     {
         ArgumentNullException.ThrowIfNull(_socket);
@@ -53,7 +53,8 @@ internal class UnixSocket : IMpvSocket
         });
     }
 
-    private async Task<TResponse> GetResponseAsync<TResponse>(int requestId)
+    [MemberNotNull(nameof(_socket))]
+    private async Task<TResponse> ReceiveAsync<TResponse>(int requestId)
         where TResponse : MpvResponse
     {
         ArgumentNullException.ThrowIfNull(_socket);
@@ -69,6 +70,8 @@ internal class UnixSocket : IMpvSocket
                 responseBuffer.Append(Encoding.UTF8.GetString(buffer, 0, received));
             });
         }
+        
+        Console.WriteLine(responseBuffer.ToString());
 
         var response = responseBuffer
             .ToString()
@@ -95,13 +98,18 @@ internal class UnixSocket : IMpvSocket
         return response;
     }
 
-    [MemberNotNull(nameof(_socket))]
     public async Task<TResponse> SendCommandAsync<TCommand, TResponse>(TCommand command)
         where TCommand : MpvCommand
         where TResponse : MpvResponse
     {
-        await SendCommandAsync(command);
+        await SendAsync(command);
 
-        return await DefaultRetry.ExecuteAsync(async _ => await GetResponseAsync<TResponse>(command.RequestId));
+        return await DefaultRetry.ExecuteAsync(async _ => await ReceiveAsync<TResponse>(command.RequestId));
+    }
+    
+    public async Task SendCommandAsync<TCommand>(TCommand command)
+        where TCommand : MpvCommand
+    {
+        await SendCommandAsync<TCommand, MpvResponse>(command);
     }
 }

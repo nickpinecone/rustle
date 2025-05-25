@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace Rustle.Library.Commands;
 
-internal abstract record MpvResponse
+internal record MpvResponse
 {
     [JsonPropertyName("error")]
     public required string Error { get; set; }

@@ -18,6 +18,8 @@ public class MpvPlayer
 
     private static int _uniqueId = 0;
 
+    public bool Playing { get; private set; } = false;
+
     public MpvPlayer(string? mpvPath = null)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
@@ -38,6 +40,8 @@ public class MpvPlayer
 
     public async Task PlayAsync(string url)
     {
+        await StopAsync();
+        
         _tokenSource = new CancellationTokenSource();
 
         _playTask = Cli.Wrap(_mpvPath)
@@ -45,6 +49,8 @@ public class MpvPlayer
             .ExecuteAsync(_tokenSource.Token);
 
         await _socket.ConnectAsync();
+
+        Playing = true;
     }
 
     public async Task WaitAsync()
@@ -64,6 +70,8 @@ public class MpvPlayer
             _playTask = null;
             _tokenSource = null;
         }
+        
+        Playing = false;
     }
 
     public async Task PauseAsync()
