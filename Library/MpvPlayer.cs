@@ -4,15 +4,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using CliWrap;
 using Rustle.Library.Commands;
-using Rustle.Library.Socket;
 
 namespace Rustle.Library;
 
 public class MpvPlayer : IAsyncDisposable
 {
     private readonly CancellationTokenSource _tokenSource;
-    private readonly IMpvSocket _socket;
-    
+    private readonly MpvSocket _socket;
+
     private readonly string _mpvPath;
     private static int _uniqueId = 0;
 
@@ -23,18 +22,17 @@ public class MpvPlayer : IAsyncDisposable
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
             _mpvPath = mpvPath ?? "mpv";
-            _socket = new UnixSocket();
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             _mpvPath = mpvPath ?? "mpv.exe";
-            _socket = new WindowsSocket();
         }
         else
         {
             throw new Exception("Unsupported operating system");
         }
 
+        _socket = new MpvSocket();
         _tokenSource = new CancellationTokenSource();
     }
 
@@ -51,8 +49,6 @@ public class MpvPlayer : IAsyncDisposable
     {
         await _tokenSource.CancelAsync();
         await _socket.CloseAsync();
-        
-        GC.SuppressFinalize(this);
     }
 
     public async Task PlayAsync(string url)

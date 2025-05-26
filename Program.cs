@@ -14,7 +14,7 @@ public static class Program
         await player.PlayAsync("http://rdstream-0625.dez.ovh:8000/radio.mp3");
         
         await player.SetVolumeAsync(50);
-
+        
         var volume = await player.GetVolumeAsync();
         Console.WriteLine(volume);
         
@@ -27,7 +27,7 @@ public static class Program
         await player.PlayAsync("http://rdstream-0625.dez.ovh:8000/radio.mp3");
         
         await player.SetVolumeAsync(50);
-
+        
         volume = await player.GetVolumeAsync();
         Console.WriteLine(volume);
         
