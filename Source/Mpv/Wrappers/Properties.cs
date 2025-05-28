@@ -1,6 +1,6 @@
-namespace Rustle.Library;
+namespace Rustle.Mpv.Wrappers;
 
-internal static class MpvProperties
+internal static class Properties
 {
     public const string Volume = "volume";
     public const string Pause = "pause";

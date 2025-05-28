@@ -1,9 +1,9 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Rustle.Library;
+namespace Rustle.Mpv.Wrappers;
 
-internal record MpvResponse
+internal record Response
 {
     [JsonPropertyName("error")]
     public required string Error { get; set; }

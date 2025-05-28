@@ -1,19 +1,19 @@
 using System;
 
-namespace Rustle.Library;
+namespace Rustle.Mpv.Wrappers;
 
-internal static class MpvEventNames
+internal static class EventNames
 {
     public const string PropertyChange = "property-change";
     public const string EndFile = "end-file";
 
-    public static Type GetEventType(this MpvEvent @event)
+    public static Type GetEventType(this Event @event)
     {
-        return @event.Event switch
+        return @event.EventName switch
         {
             PropertyChange => typeof(PropertyChangeEvent),
             EndFile => typeof(EndFileEvent),
-            _ => typeof(MpvEvent)
+            _ => typeof(Event)
         };
     }
 }

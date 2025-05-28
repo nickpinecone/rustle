@@ -5,23 +5,25 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using CliWrap;
+using Rustle.Mpv.Wrappers;
 
-namespace Rustle.Library;
+namespace Rustle.Mpv;
 
-public class MpvPlayer : IAsyncDisposable
+public class Player : IAsyncDisposable
 {
-    private readonly CancellationTokenSource _tokenSource;
-    private readonly MpvSocket _socket;
+    private readonly CancellationTokenSource _tokenSource = new();
+    private readonly IpcSocket _socket = new();
 
     private readonly string _mpvPath;
     private static int _uniqueId = 0;
 
+    public event EventHandler<string>? PlayError = null;
     public event EventHandler<string>? MediaTitleChange = null;
 
     private string _prevUrl = string.Empty;
     public bool Playing { get; private set; } = false;
 
-    public MpvPlayer(string? mpvPath = null)
+    public Player(string? mpvPath = null)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
@@ -35,9 +37,6 @@ public class MpvPlayer : IAsyncDisposable
         {
             throw new Exception("Unsupported operating system");
         }
-
-        _socket = new MpvSocket();
-        _tokenSource = new CancellationTokenSource();
     }
 
     public async Task Initialize()
@@ -51,7 +50,7 @@ public class MpvPlayer : IAsyncDisposable
         _ = ProcessEvents();
 
         Interlocked.Increment(ref _uniqueId);
-        await _socket.SendCommandAsync(new ObservePropertyCommand(_uniqueId, MpvProperties.MediaTitle));
+        await _socket.SendCommandAsync(new ObservePropertyCommand(_uniqueId, Properties.MediaTitle));
     }
 
     private async Task ProcessEvents()
@@ -60,11 +59,17 @@ public class MpvPlayer : IAsyncDisposable
         {
             switch (@event)
             {
-                case PropertyChangeEvent propertyChange when propertyChange.Name == MpvProperties.MediaTitle:
-                    MediaTitleChange?.Invoke(null, propertyChange.Data.GetString()!);
+                case PropertyChangeEvent propertyChange when propertyChange.Name == Properties.MediaTitle:
+                    MediaTitleChange?.Invoke(this, propertyChange.Data.ToString());
                     break;
 
                 case EndFileEvent endFile when Playing:
+                    if (endFile.Reason == EndFileReasons.Error)
+                    {
+                        PlayError?.Invoke(this, endFile.FileError);
+                    }
+                    
+                    await Task.Delay(1000);
                     await PlayAsync(_prevUrl);
                     break;
             }
@@ -80,35 +85,37 @@ public class MpvPlayer : IAsyncDisposable
     public async Task PlayAsync(string url)
     {
         _prevUrl = url;
+        Playing = true;
+
         Interlocked.Increment(ref _uniqueId);
         await _socket.SendCommandAsync(new LoadfileCommand(_uniqueId, url));
-        Playing = true;
     }
 
     public async Task StopAsync()
     {
+        Playing = false;
+
         Interlocked.Increment(ref _uniqueId);
         await _socket.SendCommandAsync(new StopCommand(_uniqueId));
-        Playing = false;
     }
 
     public async Task PauseAsync()
     {
         Interlocked.Increment(ref _uniqueId);
-        await _socket.SendCommandAsync(new SetPropertyCommand(_uniqueId, MpvProperties.Pause, true));
+        await _socket.SendCommandAsync(new SetPropertyCommand(_uniqueId, Properties.Pause, true));
     }
 
     public async Task ResumeAsync()
     {
         Interlocked.Increment(ref _uniqueId);
-        await _socket.SendCommandAsync(new SetPropertyCommand(_uniqueId, MpvProperties.Pause, false));
+        await _socket.SendCommandAsync(new SetPropertyCommand(_uniqueId, Properties.Pause, false));
     }
 
     public async Task<bool> GetPausedAsync()
     {
         Interlocked.Increment(ref _uniqueId);
         var response =
-            await _socket.SendCommandAsync(new GetPropertyCommand(_uniqueId, MpvProperties.Pause));
+            await _socket.SendCommandAsync(new GetPropertyCommand(_uniqueId, Properties.Pause));
         return response.Data.GetBoolean();
     }
 
@@ -116,14 +123,14 @@ public class MpvPlayer : IAsyncDisposable
     {
         Interlocked.Increment(ref _uniqueId);
         volume = int.Clamp(volume, 0, 100);
-        await _socket.SendCommandAsync(new SetPropertyCommand(_uniqueId, MpvProperties.Volume, volume));
+        await _socket.SendCommandAsync(new SetPropertyCommand(_uniqueId, Properties.Volume, volume));
     }
 
     public async Task<int> GetVolumeAsync()
     {
         Interlocked.Increment(ref _uniqueId);
         var response =
-            await _socket.SendCommandAsync(new GetPropertyCommand(_uniqueId, MpvProperties.Volume));
+            await _socket.SendCommandAsync(new GetPropertyCommand(_uniqueId, Properties.Volume));
         return (int)response.Data.GetDouble();
     }
 
@@ -131,7 +138,7 @@ public class MpvPlayer : IAsyncDisposable
     {
         Interlocked.Increment(ref _uniqueId);
         var response =
-            await _socket.SendCommandAsync(new GetPropertyCommand(_uniqueId, MpvProperties.MediaTitle));
-        return response.Data.GetString()!;
+            await _socket.SendCommandAsync(new GetPropertyCommand(_uniqueId, Properties.MediaTitle));
+        return response.Data.ToString();
     }
 }
