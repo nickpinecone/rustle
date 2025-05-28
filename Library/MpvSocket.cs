@@ -1,14 +1,15 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using Polly;
 using Polly.Retry;
-using Rustle.Library.Commands;
 
 namespace Rustle.Library;
 
@@ -24,7 +25,14 @@ internal class MpvSocket
     private readonly CancellationTokenSource _tokenSource = new();
 
     private readonly Socket _socket = new(AddressFamily.Unix, SocketType.Stream, ProtocolType.IP);
-    private readonly ConcurrentDictionary<int, TaskCompletionSource<string>> _commandResponses = new();
+    private readonly ConcurrentDictionary<int, TaskCompletionSource<MpvResponse>> _commandResponses = new();
+
+    private readonly Channel<MpvEvent> _events = Channel.CreateUnbounded<MpvEvent>(new UnboundedChannelOptions()
+    {
+        SingleReader = true,
+    });
+
+    public IAsyncEnumerable<MpvEvent> Events => _events.Reader.ReadAllAsync();
 
     public string GetName()
     {
@@ -115,14 +123,31 @@ internal class MpvSocket
 
     private void ProcessMessage(string message)
     {
+        Console.WriteLine(message);
+        
         try
         {
-            var json = JsonSerializer.Deserialize<MpvResponse>(message);
+            var response = JsonSerializer.Deserialize<MpvResponse>(message);
 
-            if (json is not null && _commandResponses.TryRemove(json.RequestId, out var taskSource))
+            if (response is not null && _commandResponses.TryRemove(response.RequestId, out var taskSource))
             {
-                taskSource.TrySetResult(message);
+                taskSource.TrySetResult(response);
             }
+        }
+        catch (JsonException)
+        {
+            // Invalid message
+        }
+            
+        try
+        {
+            var baseEvent = JsonSerializer.Deserialize<MpvEvent>(message);
+            if (baseEvent is null) return;
+            
+            var actualEvent = JsonSerializer.Deserialize(message, baseEvent.GetEventType());
+            if (actualEvent is null) return;
+            
+            _events.Writer.TryWrite((MpvEvent)actualEvent);
         }
         catch (JsonException)
         {
@@ -130,27 +155,17 @@ internal class MpvSocket
         }
     }
 
-    public async Task<TResponse> SendCommandAsync<TCommand, TResponse>(TCommand command)
+    public async Task<MpvResponse> SendCommandAsync<TCommand>(TCommand command)
         where TCommand : MpvCommand
-        where TResponse : MpvResponse
     {
-        var taskSource = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var taskSource = new TaskCompletionSource<MpvResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
         _commandResponses.TryAdd(command.RequestId, taskSource);
-        
+
         await SendAsync(command);
-        
+
         using var timeout = new CancellationTokenSource();
         timeout.CancelAfter(TimeSpan.FromSeconds(5));
 
-        var responseRaw = await taskSource.Task.WaitAsync(timeout.Token);
-        var response = JsonSerializer.Deserialize<TResponse>(responseRaw);
-        
-        return response!;
-    }
-
-    public async Task SendCommandAsync<TCommand>(TCommand command)
-        where TCommand : MpvCommand
-    {
-        await SendCommandAsync<TCommand, MpvResponse>(command);
+        return await taskSource.Task.WaitAsync(timeout.Token);
     }
 }

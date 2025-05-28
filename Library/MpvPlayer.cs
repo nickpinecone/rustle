@@ -1,9 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using CliWrap;
-using Rustle.Library.Commands;
 
 namespace Rustle.Library;
 
@@ -15,6 +16,9 @@ public class MpvPlayer : IAsyncDisposable
     private readonly string _mpvPath;
     private static int _uniqueId = 0;
 
+    public event EventHandler<string>? MediaTitleChange = null;
+
+    private string _prevUrl = string.Empty;
     public bool Playing { get; private set; } = false;
 
     public MpvPlayer(string? mpvPath = null)
@@ -43,6 +47,28 @@ public class MpvPlayer : IAsyncDisposable
             .ExecuteAsync(_tokenSource.Token);
 
         await _socket.ConnectAsync();
+
+        _ = ProcessEvents();
+
+        Interlocked.Increment(ref _uniqueId);
+        await _socket.SendCommandAsync(new ObservePropertyCommand(_uniqueId, MpvProperties.MediaTitle));
+    }
+
+    private async Task ProcessEvents()
+    {
+        await foreach (var @event in _socket.Events)
+        {
+            switch (@event)
+            {
+                case PropertyChangeEvent propertyChange when propertyChange.Name == MpvProperties.MediaTitle:
+                    MediaTitleChange?.Invoke(null, propertyChange.Data.GetString()!);
+                    break;
+
+                case EndFileEvent endFile when Playing:
+                    await PlayAsync(_prevUrl);
+                    break;
+            }
+        }
     }
 
     public async ValueTask DisposeAsync()
@@ -53,6 +79,7 @@ public class MpvPlayer : IAsyncDisposable
 
     public async Task PlayAsync(string url)
     {
+        _prevUrl = url;
         Interlocked.Increment(ref _uniqueId);
         await _socket.SendCommandAsync(new LoadfileCommand(_uniqueId, url));
         Playing = true;
@@ -68,45 +95,43 @@ public class MpvPlayer : IAsyncDisposable
     public async Task PauseAsync()
     {
         Interlocked.Increment(ref _uniqueId);
-        await _socket.SendCommandAsync(new PauseCommand(_uniqueId));
+        await _socket.SendCommandAsync(new SetPropertyCommand(_uniqueId, MpvProperties.Pause, true));
     }
 
     public async Task ResumeAsync()
     {
         Interlocked.Increment(ref _uniqueId);
-        await _socket.SendCommandAsync(new ResumeCommand(_uniqueId));
+        await _socket.SendCommandAsync(new SetPropertyCommand(_uniqueId, MpvProperties.Pause, false));
     }
 
     public async Task<bool> GetPausedAsync()
     {
         Interlocked.Increment(ref _uniqueId);
         var response =
-            await _socket.SendCommandAsync<GetPauseCommand, GetPauseResponse>(new GetPauseCommand(_uniqueId));
-        return response.IsPaused;
+            await _socket.SendCommandAsync(new GetPropertyCommand(_uniqueId, MpvProperties.Pause));
+        return response.Data.GetBoolean();
     }
 
     public async Task SetVolumeAsync(int volume)
     {
         Interlocked.Increment(ref _uniqueId);
         volume = int.Clamp(volume, 0, 100);
-        await _socket.SendCommandAsync(new SetVolumeCommand(_uniqueId, volume));
+        await _socket.SendCommandAsync(new SetPropertyCommand(_uniqueId, MpvProperties.Volume, volume));
     }
 
     public async Task<int> GetVolumeAsync()
     {
         Interlocked.Increment(ref _uniqueId);
         var response =
-            await _socket.SendCommandAsync<GetVolumeCommand, GetVolumeResponse>(new GetVolumeCommand(_uniqueId));
-        return (int)response.Volume;
+            await _socket.SendCommandAsync(new GetPropertyCommand(_uniqueId, MpvProperties.Volume));
+        return (int)response.Data.GetDouble();
     }
 
     public async Task<string> GetMediaTitleAsync()
     {
         Interlocked.Increment(ref _uniqueId);
         var response =
-            await _socket.SendCommandAsync<GetMediaTitleCommand, GetMediaTitleResponse>(
-                new GetMediaTitleCommand(_uniqueId)
-            );
-        return response.MediaTitle;
+            await _socket.SendCommandAsync(new GetPropertyCommand(_uniqueId, MpvProperties.MediaTitle));
+        return response.Data.GetString()!;
     }
 }

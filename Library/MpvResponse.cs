@@ -1,6 +1,7 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Rustle.Library.Commands;
+namespace Rustle.Library;
 
 internal record MpvResponse
 {
@@ -9,6 +10,9 @@ internal record MpvResponse
 
     [JsonPropertyName("request_id")]
     public required int RequestId { get; set; }
+
+    [JsonPropertyName("data")]
+    public JsonElement Data { get; set; }
 
     public bool IsSuccess => Error == "success";
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Rustle.Library;
 
@@ -11,31 +12,18 @@ public static class Program
         var player = new MpvPlayer();
         await player.Initialize();
 
+        var some = new JsonElement();
+
+        player.MediaTitleChange += (sender, title) =>
+        {
+            Console.WriteLine($"I got the change: {title}");
+        };
+
         await player.PlayAsync("http://rdstream-0625.dez.ovh:8000/radio.mp3");
-        
-        await player.SetVolumeAsync(50);
-        
+
         var volume = await player.GetVolumeAsync();
+        
         Console.WriteLine(volume);
-        
-        var isPaused = await player.GetPausedAsync();
-        Console.WriteLine(isPaused);
-        
-        var title = await player.GetMediaTitleAsync();
-        Console.WriteLine(title);
-        
-        await player.PlayAsync("http://rdstream-0625.dez.ovh:8000/radio.mp3");
-        
-        await player.SetVolumeAsync(50);
-        
-        volume = await player.GetVolumeAsync();
-        Console.WriteLine(volume);
-        
-        isPaused = await player.GetPausedAsync();
-        Console.WriteLine(isPaused);
-        
-        title = await player.GetMediaTitleAsync();
-        Console.WriteLine(title);
 
         Console.Read();
     }
