@@ -124,8 +124,6 @@ internal class IpcSocket
 
     private void ProcessMessage(string message)
     {
-        Console.WriteLine(message);
-        
         try
         {
             var response = JsonSerializer.Deserialize<Response>(message);

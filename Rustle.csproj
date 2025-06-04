@@ -8,5 +8,6 @@
     <ItemGroup>
         <PackageReference Include="CliWrap" Version="3.8.2" />
         <PackageReference Include="Polly.Core" Version="8.5.2" />
+        <PackageReference Include="Terminal.Gui" Version="1.18.1" />
     </ItemGroup>
 </Project>
